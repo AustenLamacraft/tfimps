@@ -29,7 +29,6 @@ Z = tf.constant([[1,0],[0,-1]])
 XX = tf.einsum('ij,kl->ikjl', X, X)
 YY = - tf.einsum('ij,kl->ikjl', iY, iY)
 ZZ = tf.einsum('ij,kl->ikjl', X, X)
-print(XX, YY, ZZ)
 
 # The Heisenberg Hamiltonian
 
