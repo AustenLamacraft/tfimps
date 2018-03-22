@@ -8,12 +8,11 @@ import tensorflow.contrib.eager as tfe
 
 tfe.enable_eager_execution()
 
-# Assume spin-1/2 for now
-
 bond_d = 5 # bond dimension of MPS
 
-# Initialize MPS and add to graph
+# Initialize MPS and add to computational graph
 # TODO Need to symmetrize
+# Assume spin-1/2 for now
 A_init = np.random.rand(2, bond_d, bond_d)
 A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
 
@@ -36,9 +35,8 @@ print(XX, YY, ZZ)
 
 H_XXX = XX + YY + ZZ
 
-
+# Confirm eigenvectors are working
 eigvals, eigvecs = tf.self_adjoint_eig(T)
-
 print(eigvals)
 
 
