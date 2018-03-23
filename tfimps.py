@@ -1,19 +1,21 @@
 import numpy as np
 import tensorflow as tf
-import tensorflow.contrib.eager as tfe
+#import tensorflow.contrib.eager as tfe
+
+#tfe.enable_eager_execution()
 
 # Optimization of infinite matrix product states in TensorFlow
 
 def transfer_matrix(A):
-    return tf.reduce_sum(A, axis=0)
+    bond_d = A.get_shape().as_list()[1]
+    T = tf.einsum("sab,scd->acbd", A, A)
+    return tf.reshape(T, [bond_d**2, bond_d**2])
 
-def dominant_eigenvalue_and_vector(T):
+def dominant_eig(T):
     eigvals, eigvecs = tf.self_adjoint_eig(T)
     idx = tf.argmax(eigvals)
     return eigvals[idx], eigvecs[idx]
 
-
-#tfe.enable_eager_execution()
 
 # bond dimension of MPS
 bond_d = 5
@@ -41,8 +43,7 @@ with tf.Session() as sess:
 
     # Confirm eigenvectors are working
     sess.run(tf.global_variables_initializer())
-    print(sess.run(dominant_eigenvalue_and_vector(transfer_matrix(A))))
-
+    print(sess.run(dominant_eig(transfer_matrix(A))))
 
 
 
