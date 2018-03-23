@@ -9,12 +9,15 @@ import tensorflow as tf
 
 class TFIMPS:
 
-    def __init__(self, phys_d, bond_d):
+    def __init__(self, phys_d, bond_d, bond_matrices=None):
         self.phys_d = phys_d
         self.bond_d = bond_d
         # Initialize MPS and add to computational graph
         # No need to symmetrize as only lower triangular part is used by eigensolver
-        A_init = np.random.rand(phys_d, bond_d, bond_d)
+        if bond_matrices:
+            A_init = bond_matrices
+        else:
+            A_init = np.random.rand(phys_d, bond_d, bond_d)
         self.A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
 
     def variational_e(self, hamiltonian):
@@ -46,7 +49,7 @@ class TFIMPS:
 
 # physical and bond dimensions of MPS
 phys_d = 2
-bond_d = 5
+bond_d = 10
 
 imps = TFIMPS(phys_d, bond_d)
 
