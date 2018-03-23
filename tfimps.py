@@ -6,25 +6,45 @@ import tensorflow as tf
 
 # Optimization of infinite matrix product states in TensorFlow
 
-def transfer_matrix(A):
-    bond_d = A.get_shape().as_list()[1]
-    T = tf.einsum("sab,scd->acbd", A, A)
-    return tf.reshape(T, [bond_d**2, bond_d**2])
 
-def dominant_eig(T):
-    eigvals, eigvecs = tf.self_adjoint_eig(T)
-    idx = tf.argmax(eigvals)
-    return eigvals[idx], eigvecs[idx]
+class TFIMPS:
+
+    def __init__(self, bond_d):
+        self.bond_d = bond_d
+        # Initialize MPS and add to computational graph
+        # No need to symmetrize as only lower triangular part is used by eigensolver
+        #  Assume spin-1/2 for now
+        A_init = np.random.rand(2, bond_d, bond_d)
+        self.A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
+
+    def variational_e(self, hamiltonian):
+        '''
+        Evaluate the variational energy density.
+
+        :param hamiltonian: tensor of shape [phys_d, phys_d, phys_d, phys_d] giving two-site Hamiltonian
+        :return: expectation value of the energy density
+        '''
+        dom_eigval, dom_eigvec = self._dominant_eig
+        return self.A / tf.sqrt(dom_eigval)
+
+    @property
+    def _transfer_matrix(self):
+        T = tf.einsum("sab,scd->acbd", self.A, self.A)
+        return tf.reshape(T, [self.bond_d**2, self.bond_d**2])
+
+    @property
+    def _dominant_eig(self):
+        eigvals, eigvecs = tf.self_adjoint_eig(self._transfer_matrix)
+        idx = tf.argmax(eigvals)
+        return eigvals[idx], eigvecs[idx]
+
+
 
 
 # bond dimension of MPS
 bond_d = 5
 
-# Initialize MPS and add to computational graph
-# No need to symmetrize as only lower triangular part is used by eigensolver
-# Assume spin-1/2 for now
-A_init = np.random.rand(2, bond_d, bond_d)
-A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
+imps = TFIMPS(bond_d)
 
 # Pauli matrices. For now we avoid complex numbers
 
@@ -41,9 +61,10 @@ H_XXX = XX + YY + ZZ
 
 with tf.Session() as sess:
 
-    # Confirm eigenvectors are working
+    # Try normalizing
     sess.run(tf.global_variables_initializer())
-    print(sess.run(dominant_eig(transfer_matrix(A))))
+    A_norm = imps.variational_e(H_XXX)
+    print(sess.run(A_norm))
 
 
 
