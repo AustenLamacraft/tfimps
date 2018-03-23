@@ -9,23 +9,28 @@ import tensorflow as tf
 
 class TFIMPS:
 
-    def __init__(self, bond_d):
+    def __init__(self, phys_d, bond_d):
+        self.phys_d = phys_d
         self.bond_d = bond_d
         # Initialize MPS and add to computational graph
         # No need to symmetrize as only lower triangular part is used by eigensolver
-        #  Assume spin-1/2 for now
-        A_init = np.random.rand(2, bond_d, bond_d)
+        A_init = np.random.rand(phys_d, bond_d, bond_d)
         self.A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
 
     def variational_e(self, hamiltonian):
-        '''
+        """
         Evaluate the variational energy density.
 
         :param hamiltonian: tensor of shape [phys_d, phys_d, phys_d, phys_d] giving two-site Hamiltonian
         :return: expectation value of the energy density
-        '''
+        """
         dom_eigval, dom_eigvec = self._dominant_eig
-        return self.A / tf.sqrt(dom_eigval)
+        dom_eigmat = tf.reshape(dom_eigvec, [self.bond_d, self.bond_d])
+        L_AAbar = tf.einsum("ab,sac,tbd->stcd", dom_eigmat, self.A, self.A)
+        AAbar_R = tf.einsum("uac,vbd,cd->uvab", self.A, self.A, dom_eigmat)
+        L_AAbar_AAbar_R = tf.einsum("stab,uvab->stuv", L_AAbar, AAbar_R)
+        h_exp = tf.einsum("stuv,sutv->", L_AAbar_AAbar_R, hamiltonian)
+        return h_exp / tf.square(dom_eigval)
 
     @property
     def _transfer_matrix(self):
@@ -39,18 +44,17 @@ class TFIMPS:
         return eigvals[idx], eigvecs[idx]
 
 
-
-
-# bond dimension of MPS
+# physical and bond dimensions of MPS
+phys_d = 2
 bond_d = 5
 
-imps = TFIMPS(bond_d)
+imps = TFIMPS(phys_d, bond_d)
 
 # Pauli matrices. For now we avoid complex numbers
 
-X = tf.constant([[0,1],[1,0]])
-iY = tf.constant([[0,1],[-1,1]])
-Z = tf.constant([[1,0],[0,-1]])
+X = tf.constant([[0,1],[1,0]], dtype=tf.float64)
+iY = tf.constant([[0,1],[-1,1]], dtype=tf.float64)
+Z = tf.constant([[1,0],[0,-1]], dtype=tf.float64)
 
 XX = tf.einsum('ij,kl->ikjl', X, X)
 YY = - tf.einsum('ij,kl->ikjl', iY, iY)
