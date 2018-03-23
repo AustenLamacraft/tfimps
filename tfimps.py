@@ -12,10 +12,10 @@ class Tfimps:
         self.bond_d = bond_d
         # Initialize MPS and add to computational graph
         # No need to symmetrize as only lower triangular part is used by eigensolver
-        if bond_matrices:
-            A_init = bond_matrices
-        else:
+        if bond_matrices is None:
             A_init = np.random.rand(phys_d, bond_d, bond_d)
+        else:
+            A_init = bond_matrices
         self.A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
 
     def variational_e(self, hamiltonian):
@@ -54,7 +54,6 @@ if __name__ == "__main__":
     imps = Tfimps(phys_d, bond_d)
 
     # Pauli matrices. For now we avoid complex numbers
-
     X = tf.constant([[0,1],[1,0]], dtype=tf.float64)
     iY = tf.constant([[0,1],[-1,1]], dtype=tf.float64)
     Z = tf.constant([[1,0],[0,-1]], dtype=tf.float64)
@@ -68,7 +67,6 @@ if __name__ == "__main__":
 
     with tf.Session() as sess:
 
-        # Try normalizing
         sess.run(tf.global_variables_initializer())
         print(sess.run(imps.variational_e(H_XXX)))
 
