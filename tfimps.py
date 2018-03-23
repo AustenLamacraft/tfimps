@@ -5,7 +5,7 @@ import tensorflow as tf
 
 # Optimization of infinite matrix product states in TensorFlow
 
-class TFIMPS:
+class Tfimps:
 
     def __init__(self, phys_d, bond_d, bond_matrices=None):
         self.phys_d = phys_d
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     phys_d = 2
     bond_d = 10
 
-    imps = TFIMPS(phys_d, bond_d)
+    imps = Tfimps(phys_d, bond_d)
 
     # Pauli matrices. For now we avoid complex numbers
 
@@ -70,8 +70,8 @@ if __name__ == "__main__":
 
         # Try normalizing
         sess.run(tf.global_variables_initializer())
-        A_norm = imps.variational_e(H_XXX)
-        print(sess.run(A_norm))
+        print(sess.run(imps.variational_e(H_XXX)))
+
 
 
 
