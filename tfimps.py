@@ -1,11 +1,9 @@
 import numpy as np
 import tensorflow as tf
 #import tensorflow.contrib.eager as tfe
-
 #tfe.enable_eager_execution()
 
 # Optimization of infinite matrix product states in TensorFlow
-
 
 class TFIMPS:
 
@@ -47,31 +45,33 @@ class TFIMPS:
         return eigvals[idx], eigvecs[idx]
 
 
-# physical and bond dimensions of MPS
-phys_d = 2
-bond_d = 10
+if __name__ == "__main__":
 
-imps = TFIMPS(phys_d, bond_d)
+    # physical and bond dimensions of MPS
+    phys_d = 2
+    bond_d = 10
 
-# Pauli matrices. For now we avoid complex numbers
+    imps = TFIMPS(phys_d, bond_d)
 
-X = tf.constant([[0,1],[1,0]], dtype=tf.float64)
-iY = tf.constant([[0,1],[-1,1]], dtype=tf.float64)
-Z = tf.constant([[1,0],[0,-1]], dtype=tf.float64)
+    # Pauli matrices. For now we avoid complex numbers
 
-XX = tf.einsum('ij,kl->ikjl', X, X)
-YY = - tf.einsum('ij,kl->ikjl', iY, iY)
-ZZ = tf.einsum('ij,kl->ikjl', X, X)
+    X = tf.constant([[0,1],[1,0]], dtype=tf.float64)
+    iY = tf.constant([[0,1],[-1,1]], dtype=tf.float64)
+    Z = tf.constant([[1,0],[0,-1]], dtype=tf.float64)
 
-# Heisenberg Hamiltonian
-H_XXX = XX + YY + ZZ
+    XX = tf.einsum('ij,kl->ikjl', X, X)
+    YY = - tf.einsum('ij,kl->ikjl', iY, iY)
+    ZZ = tf.einsum('ij,kl->ikjl', X, X)
 
-with tf.Session() as sess:
+    # Heisenberg Hamiltonian
+    H_XXX = XX + YY + ZZ
 
-    # Try normalizing
-    sess.run(tf.global_variables_initializer())
-    A_norm = imps.variational_e(H_XXX)
-    print(sess.run(A_norm))
+    with tf.Session() as sess:
+
+        # Try normalizing
+        sess.run(tf.global_variables_initializer())
+        A_norm = imps.variational_e(H_XXX)
+        print(sess.run(A_norm))
 
 
 
