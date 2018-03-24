@@ -18,7 +18,11 @@ class Tfimps:
 
         else:
             A_init = bond_matrices
-        self.A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
+
+        # Symmetrize
+        A_upper = tf.matrix_band_part(A_init, 0, -1)
+        A_symm = 0.5 * (A_upper + tf.transpose(A_upper, [0,2,1]))
+        self.A = tf.get_variable("A_matrices", initializer=A_symm, trainable=True)
 
     def variational_e(self, hamiltonian):
         """
