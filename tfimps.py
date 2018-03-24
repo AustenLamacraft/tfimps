@@ -46,8 +46,7 @@ class Tfimps:
     def _dominant_eig(self):
         eigvals, eigvecs = tf.self_adjoint_eig(self._transfer_matrix)
         idx = tf.argmax(eigvals)
-        eigvecs = tf.transpose(eigvecs)
-        return eigvals[idx], eigvecs[idx]
+        return eigvals[idx], eigvecs[:,idx]
 
 
 if __name__ == "__main__":

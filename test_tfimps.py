@@ -18,6 +18,17 @@ class TestTfimps(tf.test.TestCase):
             actual = sess.run(imps._transfer_matrix)
             self.assertAllClose(phys_d * np.identity(4), actual)
 
+    def testDominantEigenvectorIsEigenvector(self):
+        phys_d = 3
+        bond_d = 5
+        imps = tfimps.Tfimps(phys_d, bond_d)
+
+        with self.test_session() as sess:
+            sess.run(tf.global_variables_initializer())
+            T = sess.run(imps._transfer_matrix)
+            val, vec = sess.run(imps._dominant_eig)
+            self.assertAllClose(T@vec, val*vec)
+
     def testIdentityHamiltonianHasEnergyOneDiagonalMPS(self):
         phys_d = 2
         bond_d = 5
