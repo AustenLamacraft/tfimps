@@ -11,9 +11,11 @@ class Tfimps:
         self.phys_d = phys_d
         self.bond_d = bond_d
         # Initialize MPS and add to computational graph
-        # No need to symmetrize as only lower triangular part is used by eigensolver
+        # Only lower triangular part is used by eigensolver
+        # Do we need to symmetrize for evaluation?
         if bond_matrices is None:
             A_init = np.random.rand(phys_d, bond_d, bond_d)
+
         else:
             A_init = bond_matrices
         self.A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
@@ -22,26 +24,29 @@ class Tfimps:
         """
         Evaluate the variational energy density.
 
-        :param hamiltonian: tensor of shape [phys_d, phys_d, phys_d, phys_d] giving two-site Hamiltonian
+        :param hamiltonian: tensor of shape [phys_d, phys_d, phys_d, phys_d] giving two-site Hamiltonian.
+            Adopt convention that first two indices are row, second two are column.
         :return: expectation value of the energy density
         """
         dom_eigval, dom_eigvec = self._dominant_eig
         dom_eigmat = tf.reshape(dom_eigvec, [self.bond_d, self.bond_d])
         L_AAbar = tf.einsum("ab,sac,tbd->stcd", dom_eigmat, self.A, self.A)
         AAbar_R = tf.einsum("uac,vbd,cd->uvab", self.A, self.A, dom_eigmat)
-        L_AAbar_AAbar_R = tf.einsum("stab,uvab->stuv", L_AAbar, AAbar_R)
-        h_exp = tf.einsum("stuv,sutv->", L_AAbar_AAbar_R, hamiltonian)
+        L_AAbar_AAbar_R = tf.einsum("stab,uvab->sutv", L_AAbar, AAbar_R)
+        h_exp = tf.einsum("stuv,stuv->", L_AAbar_AAbar_R, hamiltonian)
         return h_exp / tf.square(dom_eigval)
 
     @property
     def _transfer_matrix(self):
         T = tf.einsum("sab,scd->acbd", self.A, self.A)
-        return tf.reshape(T, [self.bond_d**2, self.bond_d**2])
+        T = tf.reshape(T, [self.bond_d**2, self.bond_d**2])
+        return T
 
     @property
     def _dominant_eig(self):
         eigvals, eigvecs = tf.self_adjoint_eig(self._transfer_matrix)
         idx = tf.argmax(eigvals)
+        eigvecs = tf.transpose(eigvecs)
         return eigvals[idx], eigvecs[idx]
 
 
@@ -60,7 +65,7 @@ if __name__ == "__main__":
 
     XX = tf.einsum('ij,kl->ikjl', X, X)
     YY = - tf.einsum('ij,kl->ikjl', iY, iY)
-    ZZ = tf.einsum('ij,kl->ikjl', X, X)
+    ZZ = tf.einsum('ij,kl->ikjl', Z, Z)
 
     # Heisenberg Hamiltonian
     H_XXX = XX + YY + ZZ
