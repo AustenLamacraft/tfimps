@@ -49,7 +49,7 @@ class Tfimps:
     @property
     def _dominant_eig(self):
         eigvals, eigvecs = tf.self_adjoint_eig(self._transfer_matrix)
-        idx = tf.argmax(eigvals)
+        idx = tf.cast(tf.argmax(eigvals), dtype=np.int32)
         return eigvals[idx], eigvecs[:,idx]
 
 
@@ -57,13 +57,13 @@ if __name__ == "__main__":
 
     # physical and bond dimensions of MPS
     phys_d = 2
-    bond_d = 10
+    bond_d = 20
 
     imps = Tfimps(phys_d, bond_d)
 
     # Pauli matrices. For now we avoid complex numbers
     X = tf.constant([[0,1],[1,0]], dtype=tf.float64)
-    iY = tf.constant([[0,1],[-1,1]], dtype=tf.float64)
+    iY = tf.constant([[0,1],[-1,0]], dtype=tf.float64)
     Z = tf.constant([[1,0],[0,-1]], dtype=tf.float64)
 
     XX = tf.einsum('ij,kl->ikjl', X, X)
@@ -71,20 +71,13 @@ if __name__ == "__main__":
     ZZ = tf.einsum('ij,kl->ikjl', Z, Z)
 
     # Heisenberg Hamiltonian
-    H_XXX = XX + YY + ZZ
+    h_xxx = XX + YY + ZZ
+
+    train_op = tf.train.AdamOptimizer(imps.variational_e(h_xxx)).minimize(imps.variational_e(h_xxx))
 
     with tf.Session() as sess:
 
         sess.run(tf.global_variables_initializer())
-        print(sess.run(imps.variational_e(H_XXX)))
 
-
-
-
-#
-# train_op = tf.train.GradientDescentOptimizer(max_eigval).minimize(-max_eigval)
-#
-# sess = tf.Session()
-# sess.run(tf.global_variables_initializer())
-# for i in range(10):
-#     print(sess.run([max_eigval, train_op])[0])
+        for i in range(100):
+            print(sess.run([imps.variational_e(h_xxx), train_op])[0])
