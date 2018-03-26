@@ -15,14 +15,14 @@ class Tfimps:
         # Do we need to symmetrize for evaluation?
         if bond_matrices is None:
             A_init = np.random.rand(phys_d, bond_d, bond_d)
+            # Symmetrize -- sufficient to guarantee transfer matrix is symmetric (but not necessary)
+            A_lower = tf.matrix_band_part(A_init, -1, 0)
+            A_init = A_lower + tf.transpose(A_lower, [0, 2, 1])
 
         else:
             A_init = bond_matrices
 
-        # Symmetrize
-        A_upper = tf.matrix_band_part(A_init, 0, -1)
-        A_symm = 0.5 * (A_upper + tf.transpose(A_upper, [0,2,1]))
-        self.A = tf.get_variable("A_matrices", initializer=A_symm, trainable=True)
+        self.A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
 
     def variational_e(self, hamiltonian):
         """

@@ -62,11 +62,12 @@ class TestTfimps(tf.test.TestCase):
         phys_d = 3
         bond_d = 2
 
-        # Follow Schollwock's review here
-        Mplus = np.array([[1, 0], [0, 0]])
-        Mminus = np.array([[0, 0], [0, 1]])
-        M0 = np.array([[0, 1], [1, 0]]) / np.sqrt(2)
-        bond_matrices = np.array([Mplus, M0, Mminus])
+        # Follow Annals of Physics Volume 326, Issue 1, January 2011, Pages 96-192
+        # Note that even though the As are not symmetric, the transfer matrix is
+        Aplus = np.array([[0, 1/np.sqrt(2)], [0, 0]])
+        Aminus = np.array([[0, 0], [-1/np.sqrt(2), 0]])
+        A0 = np.array([[-1/2, 0], [0, 1/2]])
+        bond_matrices = np.array([Aplus, A0, Aminus])
 
         aklt = tfimps.Tfimps(phys_d, bond_d, bond_matrices)
 
