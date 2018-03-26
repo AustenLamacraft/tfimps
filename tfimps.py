@@ -14,15 +14,13 @@ class Tfimps:
         # Only lower triangular part is used by eigensolver
         # Do we need to symmetrize for evaluation?
         if bond_matrices is None:
-            A_init = np.random.rand(phys_d, bond_d, bond_d)
-            # Symmetrize -- sufficient to guarantee transfer matrix is symmetric (but not necessary)
-            A_lower = tf.matrix_band_part(A_init, -1, 0)
-            A_init = A_lower + tf.transpose(A_lower, [0, 2, 1])
+            A_init = self._symmetrize(np.random.rand(phys_d, bond_d, bond_d))
 
         else:
             A_init = bond_matrices
 
-        self.A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
+        self.A = self._symmetrize(tf.get_variable("A_matrices", initializer=A_init, trainable=True))
+
 
     def variational_e(self, hamiltonian):
         """
@@ -52,6 +50,10 @@ class Tfimps:
         idx = tf.cast(tf.argmax(eigvals), dtype=np.int32)
         return eigvals[idx], eigvecs[:,idx]
 
+    def _symmetrize(self, M):
+        # Symmetrize -- sufficient to guarantee transfer matrix is symmetric (but not necessary)
+        M_lower = tf.matrix_band_part(M, -1, 0)
+        return (M_lower + tf.transpose(M_lower, [0, 2, 1])) / 2
 
 if __name__ == "__main__":
 
@@ -66,18 +68,26 @@ if __name__ == "__main__":
     iY = tf.constant([[0,1],[-1,0]], dtype=tf.float64)
     Z = tf.constant([[1,0],[0,-1]], dtype=tf.float64)
 
+    I = tf.eye(phys_d, dtype=tf.float64)
+
     XX = tf.einsum('ij,kl->ikjl', X, X)
     YY = - tf.einsum('ij,kl->ikjl', iY, iY)
     ZZ = tf.einsum('ij,kl->ikjl', Z, Z)
+    X1 = (tf.einsum('ij,kl->ikjl', X, I) + tf.einsum('ij,kl->ikjl', I, X)) / 2
+
 
     # Heisenberg Hamiltonian
-    h_xxx = XX + YY + ZZ
+    h_xxx = - XX - YY + ZZ
 
-    train_op = tf.train.AdamOptimizer(imps.variational_e(h_xxx)).minimize(imps.variational_e(h_xxx))
+    # Ising Hamiltonian (at criticality). Exact energy is -4/pi=-1.27324...
+    h_ising = - ZZ - X1
+
+
+    train_op = tf.train.AdamOptimizer(learning_rate = 0.01).minimize(imps.variational_e(h_ising))
 
     with tf.Session() as sess:
 
         sess.run(tf.global_variables_initializer())
 
         for i in range(100):
-            print(sess.run([imps.variational_e(h_xxx), train_op])[0])
+            print(sess.run([imps.variational_e(h_ising), train_op])[0])

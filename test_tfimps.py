@@ -64,6 +64,7 @@ class TestTfimps(tf.test.TestCase):
 
         # Follow Annals of Physics Volume 326, Issue 1, January 2011, Pages 96-192
         # Note that even though the As are not symmetric, the transfer matrix is
+        # TODO Failing because I've symmetrized the matrices
         Aplus = np.array([[0, 1/np.sqrt(2)], [0, 0]])
         Aminus = np.array([[0, 0], [-1/np.sqrt(2), 0]])
         A0 = np.array([[-1/2, 0], [0, 1/2]])

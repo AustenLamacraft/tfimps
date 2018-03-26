@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="dcabae26-2ab2-4643-a357-f4983b2838b2" name="Default" comment="Added l">
+    <list default="true" id="dcabae26-2ab2-4643-a357-f4983b2838b2" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change beforePath="$PROJECT_DIR$/test_tfimps.py" afterPath="$PROJECT_DIR$/test_tfimps.py" />
       <change beforePath="$PROJECT_DIR$/tfimps.py" afterPath="$PROJECT_DIR$/tfimps.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -14,8 +15,8 @@
   </component>
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/tfimps$Unnamed.coverage" NAME="tfimps Coverage Results" MODIFIED="1521733596232" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
-    <SUITE FILE_PATH="coverage/tfimps$tfimps.coverage" NAME="tfimps Coverage Results" MODIFIED="1522086737716" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
-    <SUITE FILE_PATH="coverage/tfimps$tfimps_tests.coverage" NAME="tfimps tests Coverage Results" MODIFIED="1522080081586" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/tfimps$tfimps.coverage" NAME="tfimps Coverage Results" MODIFIED="1522101670701" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/tfimps$tfimps_tests.coverage" NAME="tfimps tests Coverage Results" MODIFIED="1522100176370" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
@@ -23,7 +24,7 @@
         <entry file="file://$PROJECT_DIR$/tfimps.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="675">
-              <caret line="81" column="26" lean-forward="false" selection-start-line="81" selection-start-column="26" selection-end-line="81" selection-end-column="26" />
+              <caret line="91" column="26" lean-forward="false" selection-start-line="91" selection-start-column="26" selection-end-line="91" selection-end-column="26" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -57,8 +58,8 @@
       <file leaf-file-name="test_tfimps.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test_tfimps.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="91">
-              <caret line="65" column="80" lean-forward="false" selection-start-line="65" selection-start-column="80" selection-end-line="65" selection-end-column="80" />
+            <state relative-caret-position="346">
+              <caret line="66" column="60" lean-forward="false" selection-start-line="66" selection-start-column="60" selection-end-line="66" selection-end-column="60" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -87,9 +88,9 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/test_TFIMPS.py" />
-        <option value="$PROJECT_DIR$/test_tfimps.py" />
         <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/.gitignore" />
+        <option value="$PROJECT_DIR$/test_tfimps.py" />
         <option value="$PROJECT_DIR$/tfimps.py" />
       </list>
     </option>
@@ -298,19 +299,17 @@
       <option name="project" value="LOCAL" />
       <updated>1522058012213</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Added simple optimization loop in tfimps. Answers don't yet make sense for Heisenberg chain.">
+      <created>1522086819262</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1522086819262</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="tfimps_tests - 2018.03.26 at 10h 46m 58s.xml">
-      <configuration name="tfimps tests" configurationId="tests" />
-    </history-entry>
-    <history-entry file="tfimps_tests - 2018.03.26 at 10h 48m 28s.xml">
-      <configuration name="tfimps tests" configurationId="tests" />
-    </history-entry>
-    <history-entry file="tfimps_tests - 2018.03.26 at 10h 48m 46s.xml">
-      <configuration name="tfimps tests" configurationId="tests" />
-    </history-entry>
     <history-entry file="tfimps_tests - 2018.03.26 at 10h 48m 53s.xml">
       <configuration name="tfimps tests" configurationId="tests" />
     </history-entry>
@@ -332,6 +331,15 @@
     <history-entry file="tfimps_tests - 2018.03.26 at 17h 01m 22s.xml">
       <configuration name="tfimps tests" configurationId="tests" />
     </history-entry>
+    <history-entry file="tfimps_tests - 2018.03.26 at 21h 57m 17s.xml">
+      <configuration name="tfimps tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="tfimps_tests - 2018.03.26 at 21h 57m 56s.xml">
+      <configuration name="tfimps tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="tfimps_tests - 2018.03.26 at 22h 36m 17s.xml">
+      <configuration name="tfimps tests" configurationId="tests" />
+    </history-entry>
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -348,7 +356,7 @@
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.329188" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31559855" sideWeight="0.5193133" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Documentation" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32832617" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="0" y="0" width="590" height="1217" />
+      <window_info id="Documentation" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32761088" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="0" y="0" width="590" height="1217" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28899637" sideWeight="0.4828326" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.31559855" sideWeight="0.4806867" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32769045" sideWeight="0.4952343" order="7" side_tool="false" content_ui="tabs" />
@@ -412,7 +420,8 @@
     <MESSAGE value="Test: random diagonal MPS give energy one on identity hamiltonian" />
     <MESSAGE value="Test: dominant eigenvector is eigenvector (currently fails!)" />
     <MESSAGE value="AKLT test passing" />
-    <option name="LAST_COMMIT_MESSAGE" value="AKLT test passing" />
+    <MESSAGE value="Added simple optimization loop in tfimps. Answers don't yet make sense for Heisenberg chain." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added simple optimization loop in tfimps. Answers don't yet make sense for Heisenberg chain." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -554,8 +563,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/test_tfimps.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="91">
-          <caret line="65" column="80" lean-forward="false" selection-start-line="65" selection-start-column="80" selection-end-line="65" selection-end-column="80" />
+        <state relative-caret-position="346">
+          <caret line="66" column="60" lean-forward="false" selection-start-line="66" selection-start-column="60" selection-end-line="66" selection-end-column="60" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
@@ -565,7 +574,7 @@
     <entry file="file://$PROJECT_DIR$/tfimps.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="675">
-          <caret line="81" column="26" lean-forward="false" selection-start-line="81" selection-start-column="26" selection-end-line="81" selection-end-column="26" />
+          <caret line="91" column="26" lean-forward="false" selection-start-line="91" selection-start-column="26" selection-end-line="91" selection-end-column="26" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
