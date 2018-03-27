@@ -55,7 +55,7 @@ class Tfimps:
         :param range: Maximum separation at which correlations required
         :return: Correlation function
         """
-        pass
+        print("hello")
 
     # TODO Calculation of entanglement spectrum
     @property
