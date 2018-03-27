@@ -7,7 +7,7 @@ import tensorflow as tf
 
 class Tfimps:
 
-    def __init__(self, phys_d, bond_d, bond_matrices=None):
+    def __init__(self, phys_d, bond_d, bond_matrices=None, symmetrize=True):
         self.phys_d = phys_d
         self.bond_d = bond_d
         # Initialize MPS and add to computational graph
@@ -19,8 +19,10 @@ class Tfimps:
         else:
             A_init = bond_matrices
 
-        self.A = self._symmetrize(tf.get_variable("A_matrices", initializer=A_init, trainable=True))
+        self.A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
 
+        if symmetrize:
+            self.A = self._symmetrize(self.A)
 
     def variational_e(self, hamiltonian):
         """
@@ -37,6 +39,17 @@ class Tfimps:
         L_AAbar_AAbar_R = tf.einsum("stab,uvab->sutv", L_AAbar, AAbar_R)
         h_exp = tf.einsum("stuv,stuv->", L_AAbar_AAbar_R, hamiltonian)
         return h_exp / tf.square(dom_eigval)
+
+    # TODO Method for correlation functions
+    def correlator(self, operator, range):
+        """
+        Evaluate the correlation function of `operator` up to `range` sites.
+
+        :param operator: tensor of shape [phys_d, phys_d] giving single site operator
+        :param range: maximum separation at which correlations required
+        :return: correlation function
+        """
+        pass
 
     @property
     def _transfer_matrix(self):
@@ -77,11 +90,12 @@ if __name__ == "__main__":
 
 
     # Heisenberg Hamiltonian
+    # My impression is that staggered correlations go hand in hand with nonsymmetric transfer matrices
+    # This means Heisenberg is out of reach for the moment, even with the "rotation trick" below.
     h_xxx = - XX - YY + ZZ
 
     # Ising Hamiltonian (at criticality). Exact energy is -4/pi=-1.27324...
     h_ising = - ZZ - X1
-
 
     train_op = tf.train.AdamOptimizer(learning_rate = 0.01).minimize(imps.variational_e(h_ising))
 
