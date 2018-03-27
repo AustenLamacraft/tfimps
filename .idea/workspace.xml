@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="dcabae26-2ab2-4643-a357-f4983b2838b2" name="Default" comment="Added AKLT correlations test (correlations not implemented yet)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change beforePath="$PROJECT_DIR$/notebooks/tfim_example.ipynb" afterPath="$PROJECT_DIR$/notebooks/tfim_example.ipynb" />
       <change beforePath="$PROJECT_DIR$/test_tfimps.py" afterPath="$PROJECT_DIR$/test_tfimps.py" />
       <change beforePath="$PROJECT_DIR$/tfimps.py" afterPath="$PROJECT_DIR$/tfimps.py" />
     </list>
@@ -16,15 +17,15 @@
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/tfimps$Unnamed.coverage" NAME="tfimps Coverage Results" MODIFIED="1521733596232" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/tfimps$tfimps.coverage" NAME="tfimps Coverage Results" MODIFIED="1522102949401" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
-    <SUITE FILE_PATH="coverage/tfimps$tfimps_tests.coverage" NAME="tfimps tests Coverage Results" MODIFIED="1522130809387" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/tfimps$tfimps_tests.coverage" NAME="tfimps tests Coverage Results" MODIFIED="1522152168981" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="tfimps.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="tfimps.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/tfimps.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="256">
-              <caret line="93" column="97" lean-forward="false" selection-start-line="93" selection-start-column="97" selection-end-line="93" selection-end-column="97" />
+            <state relative-caret-position="-477">
+              <caret line="10" column="95" lean-forward="false" selection-start-line="10" selection-start-column="95" selection-end-line="10" selection-end-column="95" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -48,18 +49,18 @@
       <file leaf-file-name=".gitignore" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/.gitignore">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="511">
-              <caret line="46" column="17" lean-forward="false" selection-start-line="46" selection-start-column="7" selection-end-line="46" selection-end-column="17" />
+            <state relative-caret-position="285">
+              <caret line="19" column="17" lean-forward="false" selection-start-line="19" selection-start-column="17" selection-end-line="19" selection-end-column="17" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="test_tfimps.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="test_tfimps.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test_tfimps.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="648">
-              <caret line="113" column="51" lean-forward="false" selection-start-line="113" selection-start-column="51" selection-end-line="113" selection-end-column="51" />
+            <state relative-caret-position="1485">
+              <caret line="99" column="30" lean-forward="true" selection-start-line="99" selection-start-column="30" selection-end-line="99" selection-end-column="30" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -80,6 +81,7 @@
     <findStrings>
       <find>gradient</find>
       <find>cls</find>
+      <find>bond_</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -91,8 +93,8 @@
         <option value="$PROJECT_DIR$/test_TFIMPS.py" />
         <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/.gitignore" />
-        <option value="$PROJECT_DIR$/tfimps.py" />
         <option value="$PROJECT_DIR$/test_tfimps.py" />
+        <option value="$PROJECT_DIR$/tfimps.py" />
       </list>
     </option>
   </component>
@@ -102,7 +104,7 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6" fullScreen="true">
+  <component name="ProjectFrameBounds" fullScreen="true">
     <option name="y" value="23" />
     <option name="width" value="2560" />
     <option name="height" value="1417" />
@@ -199,7 +201,7 @@
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
-      <option name="SDK_HOME" value="$USER_HOME$/anaconda/envs/tensorflow/bin/python" />
+      <option name="SDK_HOME" value="$USER_HOME$/anaconda3/envs/tensorflow/bin/python" />
       <option name="WORKING_DIRECTORY" value="" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
@@ -314,28 +316,31 @@
       <option name="project" value="LOCAL" />
       <updated>1522101752201</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Fiddled with gitignore">
+      <created>1522144247787</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1522144247787</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Added notebook">
+      <created>1522145138279</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1522145138279</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Added matrix_transpose">
+      <created>1522145265018</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1522145265018</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="tfimps_tests - 2018.03.27 at 06h 41m 09s.xml">
-      <configuration name="tfimps tests" configurationId="tests" />
-    </history-entry>
-    <history-entry file="tfimps_tests - 2018.03.27 at 06h 41m 58s.xml">
-      <configuration name="tfimps tests" configurationId="tests" />
-    </history-entry>
-    <history-entry file="tfimps_tests - 2018.03.27 at 06h 42m 51s.xml">
-      <configuration name="tfimps tests" configurationId="tests" />
-    </history-entry>
-    <history-entry file="tfimps_tests - 2018.03.27 at 06h 42m 59s.xml">
-      <configuration name="tfimps tests" configurationId="tests" />
-    </history-entry>
-    <history-entry file="tfimps_tests - 2018.03.27 at 06h 45m 38s.xml">
-      <configuration name="tfimps tests" configurationId="tests" />
-    </history-entry>
-    <history-entry file="tfimps_tests - 2018.03.27 at 06h 46m 10s.xml">
-      <configuration name="tfimps tests" configurationId="tests" />
-    </history-entry>
     <history-entry file="tfimps_tests - 2018.03.27 at 06h 48m 19s.xml">
       <configuration name="tfimps tests" configurationId="tests" />
     </history-entry>
@@ -346,6 +351,24 @@
       <configuration name="tfimps tests" configurationId="tests" />
     </history-entry>
     <history-entry file="tfimps_tests - 2018.03.27 at 07h 06m 51s.xml">
+      <configuration name="tfimps tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="tfimps_tests - 2018.03.27 at 13h 00m 12s.xml">
+      <configuration name="tfimps tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="tfimps_tests - 2018.03.27 at 13h 00m 41s.xml">
+      <configuration name="tfimps tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="tfimps_tests - 2018.03.27 at 13h 01m 05s.xml">
+      <configuration name="tfimps tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="tfimps_tests - 2018.03.27 at 13h 01m 28s.xml">
+      <configuration name="tfimps tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="tfimps_tests - 2018.03.27 at 13h 02m 29s.xml">
+      <configuration name="tfimps tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="tfimps_tests - 2018.03.27 at 13h 02m 50s.xml">
       <configuration name="tfimps tests" configurationId="tests" />
     </history-entry>
   </component>
@@ -360,28 +383,28 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="1440" height="900" extended-state="6" />
+    <frame x="0" y="0" width="2560" height="1440" extended-state="0" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32889965" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31559855" sideWeight="0.5193133" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Documentation" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32761088" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="0" y="0" width="590" height="1217" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28899637" sideWeight="0.4828326" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.31559855" sideWeight="0.4806867" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Documentation" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32724383" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="0" y="0" width="590" height="1217" />
+      <window_info id="Version Control" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.31016827" sideWeight="0.4806867" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32769045" sideWeight="0.4952343" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2889539" sideWeight="0.4828326" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26466382" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26648134" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Docker" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="SciView" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
@@ -432,7 +455,10 @@
     <MESSAGE value="Success! Ground state for transverse Ising at criticality" />
     <MESSAGE value="Added some TODOs" />
     <MESSAGE value="Added AKLT correlations test (correlations not implemented yet)" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added AKLT correlations test (correlations not implemented yet)" />
+    <MESSAGE value="Fiddled with gitignore" />
+    <MESSAGE value="Added notebook" />
+    <MESSAGE value="Added matrix_transpose" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added matrix_transpose" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -446,6 +472,45 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/tfimps.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1395">
+          <caret line="93" column="24" lean-forward="true" selection-start-line="93" selection-start-column="24" selection-end-line="93" selection-end-column="24" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="285">
+          <caret line="19" column="17" lean-forward="false" selection-start-line="19" selection-start-column="17" selection-end-line="19" selection-end-column="17" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test_tfimps.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1695">
+          <caret line="113" column="51" lean-forward="false" selection-start-line="113" selection-start-column="51" selection-end-line="113" selection-end-column="51" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="45">
+            <caret line="3" column="13" lean-forward="false" selection-start-line="3" selection-start-column="13" selection-end-line="3" selection-end-column="13" />
+            <folding />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/tfimps.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="240">
@@ -566,26 +631,26 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="511">
-          <caret line="46" column="17" lean-forward="false" selection-start-line="46" selection-start-column="7" selection-end-line="46" selection-end-column="17" />
+        <state relative-caret-position="285">
+          <caret line="19" column="17" lean-forward="false" selection-start-line="19" selection-start-column="17" selection-end-line="19" selection-end-column="17" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tfimps.py">
+    <entry file="file://$PROJECT_DIR$/test_tfimps.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="256">
-          <caret line="93" column="97" lean-forward="false" selection-start-line="93" selection-start-column="97" selection-end-line="93" selection-end-column="97" />
+        <state relative-caret-position="1485">
+          <caret line="99" column="30" lean-forward="true" selection-start-line="99" selection-start-column="30" selection-end-line="99" selection-end-column="30" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test_tfimps.py">
+    <entry file="file://$PROJECT_DIR$/tfimps.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="648">
-          <caret line="113" column="51" lean-forward="false" selection-start-line="113" selection-start-column="51" selection-end-line="113" selection-end-column="51" />
+        <state relative-caret-position="-477">
+          <caret line="10" column="95" lean-forward="false" selection-start-line="10" selection-start-column="95" selection-end-line="10" selection-end-column="95" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
