@@ -60,13 +60,13 @@ class Tfimps:
     @property
     def _dominant_eig(self):
         eigvals, eigvecs = tf.self_adjoint_eig(self._transfer_matrix)
-        idx = tf.cast(tf.argmax(eigvals), dtype=np.int32)
+        idx = tf.cast(tf.argmax(tf.abs(eigvals)), dtype=np.int32)
         return eigvals[idx], eigvecs[:,idx]
 
     def _symmetrize(self, M):
         # Symmetrize -- sufficient to guarantee transfer matrix is symmetric (but not necessary)
         M_lower = tf.matrix_band_part(M, -1, 0)
-        return (M_lower + tf.transpose(M_lower, [0, 2, 1])) / 2
+        return (M_lower + tf.matrix_transpose(M_lower)) / 2
 
 if __name__ == "__main__":
 
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     phys_d = 2
     bond_d = 20
 
-    imps = Tfimps(phys_d, bond_d)
+    imps = Tfimps(phys_d, bond_d, symmetrize=True)
 
     # Pauli matrices. For now we avoid complex numbers
     X = tf.constant([[0,1],[1,0]], dtype=tf.float64)
@@ -90,9 +90,8 @@ if __name__ == "__main__":
 
 
     # Heisenberg Hamiltonian
-    # My impression is that staggered correlations go hand in hand with nonsymmetric transfer matrices
-    # This means Heisenberg is out of reach for the moment, even with the "rotation trick" below.
-    h_xxx = - XX - YY + ZZ
+    # My impression is that staggered correlations go hand in hand with nonsymmetric matrices
+    h_xxx = XX + YY + ZZ
 
     # Ising Hamiltonian (at criticality). Exact energy is -4/pi=-1.27324...
     h_ising = - ZZ - X1
@@ -103,5 +102,5 @@ if __name__ == "__main__":
 
         sess.run(tf.global_variables_initializer())
 
-        for i in range(100):
+        for i in range(50):
             print(sess.run([imps.variational_e(h_ising), train_op])[0])
