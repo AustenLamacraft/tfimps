@@ -3,21 +3,27 @@ import tensorflow as tf
 #import tensorflow.contrib.eager as tfe
 #tfe.enable_eager_execution()
 
-# Optimization of infinite matrix product states in TensorFlow
-
 class Tfimps:
+    """
+    Infinite Matrix Product State class.
+    """
 
-    def __init__(self, phys_d, bond_d, bond_matrices=None, symmetrize=True):
+    # TODO Allow for two-site unit cell and average energy between A_1 A_2 and A_2 A_1 ordering
+    def __init__(self, phys_d, bond_d, A_matrices=None, symmetrize=True):
+        """
+        :param phys_d: Physical dimension of the state e.g. 2 for spin-1/2 systems.
+        :param bond_d: Bond dimension, the size of the A matrices.
+        :param A_matrices: Square matrices of size `bond_d` forming the Matrix Product State.
+        :param symmetrize: Boolean indicating A matrices are symmetrized.
+        """
         self.phys_d = phys_d
         self.bond_d = bond_d
-        # Initialize MPS and add to computational graph
-        # Only lower triangular part is used by eigensolver
-        # Do we need to symmetrize for evaluation?
-        if bond_matrices is None:
+
+        if A_matrices is None:
             A_init = self._symmetrize(np.random.rand(phys_d, bond_d, bond_d))
 
         else:
-            A_init = bond_matrices
+            A_init = A_matrices
 
         self.A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
 
@@ -28,9 +34,9 @@ class Tfimps:
         """
         Evaluate the variational energy density.
 
-        :param hamiltonian: tensor of shape [phys_d, phys_d, phys_d, phys_d] giving two-site Hamiltonian.
+        :param hamiltonian: Tensor of shape [phys_d, phys_d, phys_d, phys_d] giving two-site Hamiltonian.
             Adopt convention that first two indices are row, second two are column.
-        :return: expectation value of the energy density
+        :return: Expectation value of the energy density.
         """
         dom_eigval, dom_eigvec = self._dominant_eig
         dom_eigmat = tf.reshape(dom_eigvec, [self.bond_d, self.bond_d])
@@ -45,9 +51,20 @@ class Tfimps:
         """
         Evaluate the correlation function of `operator` up to `range` sites.
 
-        :param operator: tensor of shape [phys_d, phys_d] giving single site operator
-        :param range: maximum separation at which correlations required
-        :return: correlation function
+        :param operator: Tensor of shape [phys_d, phys_d] giving single site operator.
+        :param range: Maximum separation at which correlations required
+        :return: Correlation function
+        """
+        pass
+
+    # TODO Calculation of entanglement spectrum
+    @property
+    def entanglement_spectrum(self):
+        """
+        Calculate the spectrum of eigenvalues of the reduced density matrix for a bipartition of
+        an infinite system into two semi-infinite subsystems.
+
+        :return: The `bond_d` eigenvalues of the reduced density matrix
         """
         pass
 
@@ -72,7 +89,7 @@ if __name__ == "__main__":
 
     # physical and bond dimensions of MPS
     phys_d = 2
-    bond_d = 20
+    bond_d = 16
 
     imps = Tfimps(phys_d, bond_d, symmetrize=True)
 
@@ -90,17 +107,17 @@ if __name__ == "__main__":
 
 
     # Heisenberg Hamiltonian
-    # My impression is that staggered correlations go hand in hand with nonsymmetric matrices
+    # My impression is that staggered correlations go hand in hand with nonsymmetric A matrices
     h_xxx = XX + YY + ZZ
 
     # Ising Hamiltonian (at criticality). Exact energy is -4/pi=-1.27324...
     h_ising = - ZZ - X1
 
-    train_op = tf.train.AdamOptimizer(learning_rate = 0.01).minimize(imps.variational_e(h_ising))
+    train_op = tf.train.AdamOptimizer(learning_rate = 0.005).minimize(imps.variational_e(h_ising))
 
     with tf.Session() as sess:
 
         sess.run(tf.global_variables_initializer())
 
-        for i in range(50):
+        for i in range(200):
             print(sess.run([imps.variational_e(h_ising), train_op])[0])

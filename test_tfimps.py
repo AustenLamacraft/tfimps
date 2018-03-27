@@ -9,9 +9,9 @@ class TestTfimps(tf.test.TestCase):
         bond_d = 2
 
         A1 = A0 =  np.identity(phys_d)
-        bond_matrices = np.array([A0, A1])
+        A_matrices = np.array([A0, A1])
 
-        imps = tfimps.Tfimps(phys_d, bond_d, bond_matrices)
+        imps = tfimps.Tfimps(phys_d, bond_d, A_matrices)
 
         with self.test_session() as sess:
             sess.run(tf.global_variables_initializer())
@@ -35,9 +35,9 @@ class TestTfimps(tf.test.TestCase):
 
         A0 = np.diag(np.random.rand(bond_d))
         A1 = np.diag(np.random.rand(bond_d))
-        bond_matrices = np.array([A0, A1])
+        A_matrices = np.array([A0, A1])
 
-        imps = tfimps.Tfimps(phys_d, bond_d, bond_matrices)
+        imps = tfimps.Tfimps(phys_d, bond_d, A_matrices)
         I = tf.eye(phys_d, dtype=tf.float64)
         h = tf.einsum('ij,kl->ikjl', I, I)
 
@@ -68,9 +68,9 @@ class TestTfimps(tf.test.TestCase):
         Aplus = np.array([[0, 1/np.sqrt(2)], [0, 0]])
         Aminus = np.array([[0, 0], [-1/np.sqrt(2), 0]])
         A0 = np.array([[-1/2, 0], [0, 1/2]])
-        bond_matrices = np.array([Aplus, A0, Aminus])
+        A_matrices = np.array([Aplus, A0, Aminus])
 
-        aklt = tfimps.Tfimps(phys_d, bond_d, bond_matrices, symmetrize=False)
+        aklt = tfimps.Tfimps(phys_d, bond_d, A_matrices, symmetrize=False)
 
         # Spin 1 operators
         X = tf.constant([[0, 1, 0 ], [1, 0, 1], [0, 1, 0]], dtype=tf.float64) / np.sqrt(2)
@@ -99,9 +99,9 @@ class TestTfimps(tf.test.TestCase):
         Aplus = np.array([[0, 1/np.sqrt(2)], [0, 0]])
         Aminus = np.array([[0, 0], [-1/np.sqrt(2), 0]])
         A0 = np.array([[-1/2, 0], [0, 1/2]])
-        bond_matrices = np.array([Aplus, A0, Aminus])
+        A_matrices = np.array([Aplus, A0, Aminus])
 
-        aklt = tfimps.Tfimps(phys_d, bond_d, bond_matrices, symmetrize=False)
+        aklt = tfimps.Tfimps(phys_d, bond_d, A_matrices, symmetrize=False)
 
         # Spin 1 operators
         X = tf.constant([[0, 1, 0 ], [1, 0, 1], [0, 1, 0]], dtype=tf.float64) / np.sqrt(2)
