@@ -62,8 +62,8 @@ class TestTfimps(tf.test.TestCase):
         phys_d = 3
         bond_d = 2
 
-        # Follow Annals of Physics Volume 326, Issue 1, Pages 96-192
-        # Note that even though the As are not symmetric, the transfer matrix is
+        # Follow Annals of Physics Volume 326, Issue 1, Pages 96-192.
+        # Note that even though the As are not symmetric, the transfer matrix is.
 
         Aplus = np.array([[0, 1/np.sqrt(2)], [0, 0]])
         Aminus = np.array([[0, 0], [-1/np.sqrt(2), 0]])
@@ -72,7 +72,8 @@ class TestTfimps(tf.test.TestCase):
 
         aklt = tfimps.Tfimps(phys_d, bond_d, A_matrices, symmetrize=False)
 
-        # Spin 1 operators
+        # Spin 1 operators.
+
         X = tf.constant([[0, 1, 0 ], [1, 0, 1], [0, 1, 0]], dtype=tf.float64) / np.sqrt(2)
         iY = tf.constant([[0, -1, 0 ], [1, 0, -1], [0, 1, 0]], dtype=tf.float64) / np.sqrt(2)
         Z = tf.constant([[1, 0, 0], [0, 0, 0], [0, 0, -1]], dtype=tf.float64)
@@ -93,8 +94,12 @@ class TestTfimps(tf.test.TestCase):
         phys_d = 3
         bond_d = 2
 
-        # Follow Annals of Physics Volume 326, Issue 1, Pages 96-192
-        # AKLT correlations appear between Eqs. (115) and (116)
+
+        # Follow Annals of Physics Volume 326, Issue 1, Pages 96-192.
+        # AKLT correlations appear between Eqs. (115) and (116).
+        # The tensors below correspond to not normalized state in the thermodynamic limit.
+        # They should all be multiplied by sqrt(4/3) to get a normalized state.
+        # One can also normalize the final result with the dominant eigenvalue.
 
         Aplus = np.array([[0, 1/np.sqrt(2)], [0, 0]])
         Aminus = np.array([[0, 0], [-1/np.sqrt(2), 0]])
@@ -103,13 +108,18 @@ class TestTfimps(tf.test.TestCase):
 
         aklt = tfimps.Tfimps(phys_d, bond_d, A_matrices, symmetrize=False)
 
-        # Spin 1 operators
+        # Spin 1 operators.
+
         X = tf.constant([[0, 1, 0 ], [1, 0, 1], [0, 1, 0]], dtype=tf.float64) / np.sqrt(2)
         iY = tf.constant([[0, -1, 0 ], [1, 0, -1], [0, 1, 0]], dtype=tf.float64) / np.sqrt(2)
         Z = tf.constant([[1, 0, 0], [0, 0, 0], [0, 0, -1]], dtype=tf.float64)
 
+        # Range of of values j-i
+
+        range = 6
+
         with self.test_session() as sess:
             sess.run(tf.global_variables_initializer())
-            xx_eval = sess.run(aklt.correlator(X, 5))
-            xx_exact = 12 / 9 * (-1/3)**np.arange(6)
+            xx_eval = sess.run(aklt.correlator(Z, range))
+            xx_exact = 12 / 9 * (-1/3)**np.arange(1,range)
             self.assertAllClose(xx_eval, xx_exact)

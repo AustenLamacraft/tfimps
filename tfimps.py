@@ -44,9 +44,13 @@ class Tfimps:
         AAbar_R = tf.einsum("uac,vbd,cd->uvab", self.A, self.A, dom_eigmat)
         L_AAbar_AAbar_R = tf.einsum("stab,uvab->sutv", L_AAbar, AAbar_R)
         h_exp = tf.einsum("stuv,stuv->", L_AAbar_AAbar_R, hamiltonian)
+
+        # For each A that appears expliciteky, we need to devide by sqrt{dom_eigval}
+
+        # so that |psi> is normalized when N->inf.
+
         return h_exp / tf.square(dom_eigval)
 
-    # TODO Method for correlation functions
     def correlator(self, operator, range):
         """
         Evaluate the correlation function of `operator` up to `range` sites.
@@ -55,7 +59,28 @@ class Tfimps:
         :param range: Maximum separation at which correlations required
         :return: Correlation function
         """
-        print("hello")
+        dom_eigval, dom_eigvec = self._dominant_eig
+        dom_eigmat = tf.reshape(dom_eigvec, [self.bond_d, self.bond_d])
+        #
+        eigval, eigvec = self._all_eig
+        eigtens = tf.reshape(tf.transpose(eigvec), [self.bond_d**2, self.bond_d, self.bond_d])
+        #
+        L_AAbar = tf.einsum("ab,sac,tbd->stcd", dom_eigmat, self.A, self.A)
+        L_AAbar_Rk = tf.einsum("stcd,kcd->kst", L_AAbar, eigtens)
+        L_AAbar_Rk_Z = tf.einsum("kst,st->k", L_AAbar_Rk, operator)
+        #
+        AAbar_R = tf.einsum("sac,tbd,cd->stab", self.A, self.A, dom_eigmat)
+        Lk_AAbar_R = tf.einsum("kab,stab->kst", eigtens, AAbar_R)
+        Lk_AAbar_R_Z = tf.einsum("kst,st->k", Lk_AAbar_R, operator)
+        #
+        ss_list = []
+        for n in np.arange(1,range):
+            delta = (n-1) * tf.ones([self.bond_d ** 2], tf.float64)
+            we = tf.reduce_sum(L_AAbar_Rk_Z * Lk_AAbar_R_Z * tf.pow(eigval, delta)) / dom_eigval ** (n + 1)
+            ss_list.append(we)
+
+        return tf.stack(ss_list)
+
 
     # TODO Calculation of entanglement spectrum
     @property
@@ -68,6 +93,8 @@ class Tfimps:
         """
         pass
 
+    # We want T to have two indices.
+
     @property
     def _transfer_matrix(self):
         T = tf.einsum("sab,scd->acbd", self.A, self.A)
@@ -76,17 +103,22 @@ class Tfimps:
 
     @property
     def _dominant_eig(self):
-        eigvals, eigvecs = tf.self_adjoint_eig(self._transfer_matrix)
-        idx = tf.cast(tf.argmax(tf.abs(eigvals)), dtype=np.int32)
-        return eigvals[idx], eigvecs[:,idx]
+        eigvals, eigvecs = tf.self_adjoint_eig(self._transfer_matrix)# Are the eigenvectors normalized?
+        # We use cast to make the number an integer
+        idx = tf.cast(tf.argmax(tf.abs(eigvals)), dtype=np.int32)# Why do abs?
+        return eigvals[idx], eigvecs[:,idx] # Note that eigenvectors are given in columns, not rows!
 
     def _symmetrize(self, M):
         # Symmetrize -- sufficient to guarantee transfer matrix is symmetric (but not necessary)
-        M_lower = tf.matrix_band_part(M, -1, 0)
+        M_lower = tf.matrix_band_part(M, -1, 0) #takes the lower triangular part of M (including the diagonal)
         return (M_lower + tf.matrix_transpose(M_lower)) / 2
 
-if __name__ == "__main__":
+    @property
+    def _all_eig(self):
+        eigvals, eigvecs = tf.self_adjoint_eig(self._transfer_matrix)  # Are the eigenvectors normalized? Yes
+        return eigvals, eigvecs
 
+if __name__ == "__main__":
     # physical and bond dimensions of MPS
     phys_d = 2
     bond_d = 16
