@@ -79,7 +79,7 @@ class Tfimps:
             we = tf.reduce_sum(L_AAbar_Rk_Z * Lk_AAbar_R_Z * tf.pow(eigval, delta)) / dom_eigval ** (n + 1)
             ss_list.append(we)
 
-        return tf.stack(ss_list)
+        return ss_list
 
 
     # TODO Calculation of entanglement spectrum
@@ -103,7 +103,7 @@ class Tfimps:
 
     @property
     def _dominant_eig(self):
-        eigvals, eigvecs = tf.self_adjoint_eig(self._transfer_matrix)# Are the eigenvectors normalized?
+        eigvals, eigvecs = self._all_eig
         # We use cast to make the number an integer
         idx = tf.cast(tf.argmax(tf.abs(eigvals)), dtype=np.int32)# Why do abs?
         return eigvals[idx], eigvecs[:,idx] # Note that eigenvectors are given in columns, not rows!
