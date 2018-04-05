@@ -9,7 +9,6 @@ class Tfimps:
     """
 
     # TODO Allow for two-site unit cell and average energy between A_1 A_2 and A_2 A_1 ordering
-    # TODO Transfer matrix and its spectrum should be tf Variables
     def __init__(self, phys_d, bond_d, A_matrices=None, symmetrize=True):
         """
         :param phys_d: Physical dimension of the state e.g. 2 for spin-1/2 systems.
