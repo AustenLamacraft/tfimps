@@ -31,6 +31,10 @@ class Tfimps:
         if symmetrize:
             self.A = self._symmetrize(self.A)
 
+        self._transfer_matrix = self._add_transfer_matrix()
+        self._all_eig = tf.self_adjoint_eig(self._transfer_matrix)
+        self._dominant_eig = self._add_dominant_eig()
+
     def variational_e(self, hamiltonian):
         """
         Evaluate the variational energy density.
@@ -82,7 +86,6 @@ class Tfimps:
 
         return ss_list
 
-
     # TODO Calculation of entanglement spectrum
     @property
     def entanglement_spectrum(self):
@@ -94,16 +97,12 @@ class Tfimps:
         """
         pass
 
-    # We want T to have two indices.
-
-    @property
-    def _transfer_matrix(self):
+    def _add_transfer_matrix(self):
         T = tf.einsum("sab,scd->acbd", self.A, self.A)
         T = tf.reshape(T, [self.bond_d**2, self.bond_d**2])
         return T
 
-    @property
-    def _dominant_eig(self):
+    def _add_dominant_eig(self):
         eigvals, eigvecs = self._all_eig
         # We use cast to make the number an integer
         idx = tf.cast(tf.argmax(tf.abs(eigvals)), dtype=np.int32)# Why do abs?
@@ -114,10 +113,6 @@ class Tfimps:
         M_lower = tf.matrix_band_part(M, -1, 0) #takes the lower triangular part of M (including the diagonal)
         return (M_lower + tf.matrix_transpose(M_lower)) / 2
 
-    @property
-    def _all_eig(self):
-        eigvals, eigvecs = tf.self_adjoint_eig(self._transfer_matrix)  # Are the eigenvectors normalized? Yes
-        return eigvals, eigvecs
 
 if __name__ == "__main__":
     # physical and bond dimensions of MPS
