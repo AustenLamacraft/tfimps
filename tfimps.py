@@ -9,8 +9,7 @@ class Tfimps:
     """
 
     # TODO Allow for two-site unit cell and average energy between A_1 A_2 and A_2 A_1 ordering
-    # TODO Transfer matrix and its spectrum should be tf Variables
-    def __init__(self, phys_d, bond_d, A_matrices=None, symmetrize=True):
+    def __init__(self, phys_d, bond_d, A_matrices=None, symmetrize=True, hamiltonian=None):
         """
         :param phys_d: Physical dimension of the state e.g. 2 for spin-1/2 systems.
         :param bond_d: Bond dimension, the size of the A matrices.
@@ -31,26 +30,12 @@ class Tfimps:
         if symmetrize:
             self.A = self._symmetrize(self.A)
 
-    def variational_e(self, hamiltonian):
-        """
-        Evaluate the variational energy density.
+        self._transfer_matrix = self._add_transfer_matrix()
+        self._all_eig = tf.self_adjoint_eig(self._transfer_matrix)
+        self._dominant_eig = self._add_dominant_eig()
 
-        :param hamiltonian: Tensor of shape [phys_d, phys_d, phys_d, phys_d] giving two-site Hamiltonian.
-            Adopt convention that first two indices are row, second two are column.
-        :return: Expectation value of the energy density.
-        """
-        dom_eigval, dom_eigvec = self._dominant_eig
-        dom_eigmat = tf.reshape(dom_eigvec, [self.bond_d, self.bond_d])
-        L_AAbar = tf.einsum("ab,sac,tbd->stcd", dom_eigmat, self.A, self.A)
-        AAbar_R = tf.einsum("uac,vbd,cd->uvab", self.A, self.A, dom_eigmat)
-        L_AAbar_AAbar_R = tf.einsum("stab,uvab->sutv", L_AAbar, AAbar_R)
-        h_exp = tf.einsum("stuv,stuv->", L_AAbar_AAbar_R, hamiltonian)
-
-        # For each A that appears expliciteky, we need to devide by sqrt{dom_eigval}
-
-        # so that |psi> is normalized when N->inf.
-
-        return h_exp / tf.square(dom_eigval)
+        if hamiltonian is not None:
+            self.variational_e = self._add_variational_e(hamiltonian)
 
     def correlator(self, operator, range):
         """
@@ -82,8 +67,6 @@ class Tfimps:
 
         return ss_list
 
-
-    # TODO Calculation of entanglement spectrum
     @property
     def entanglement_spectrum(self):
         """
@@ -94,16 +77,13 @@ class Tfimps:
         """
         pass
 
-    # We want T to have two indices.
-
-    @property
-    def _transfer_matrix(self):
+    # TODO Calculation of entanglement spectrum
+    def _add_transfer_matrix(self):
         T = tf.einsum("sab,scd->acbd", self.A, self.A)
         T = tf.reshape(T, [self.bond_d**2, self.bond_d**2])
         return T
 
-    @property
-    def _dominant_eig(self):
+    def _add_dominant_eig(self):
         eigvals, eigvecs = self._all_eig
         # We use cast to make the number an integer
         idx = tf.cast(tf.argmax(tf.abs(eigvals)), dtype=np.int32)# Why do abs?
@@ -114,17 +94,28 @@ class Tfimps:
         M_lower = tf.matrix_band_part(M, -1, 0) #takes the lower triangular part of M (including the diagonal)
         return (M_lower + tf.matrix_transpose(M_lower)) / 2
 
-    @property
-    def _all_eig(self):
-        eigvals, eigvecs = tf.self_adjoint_eig(self._transfer_matrix)  # Are the eigenvectors normalized? Yes
-        return eigvals, eigvecs
+    def _add_variational_e(self, hamiltonian):
+        """
+        Evaluate the variational energy density.
+
+        :param hamiltonian: Tensor of shape [phys_d, phys_d, phys_d, phys_d] giving two-site Hamiltonian.
+            Adopt convention that first two indices are row, second two are column.
+        :return: Expectation value of the energy density.
+        """
+        dom_eigval, dom_eigvec = self._dominant_eig
+        dom_eigmat = tf.reshape(dom_eigvec, [self.bond_d, self.bond_d])
+        L_AAbar = tf.einsum("ab,sac,tbd->stcd", dom_eigmat, self.A, self.A)
+        AAbar_R = tf.einsum("uac,vbd,cd->uvab", self.A, self.A, dom_eigmat)
+        L_AAbar_AAbar_R = tf.einsum("stab,uvab->sutv", L_AAbar, AAbar_R)
+        h_exp = tf.einsum("stuv,stuv->", L_AAbar_AAbar_R, hamiltonian)
+
+        return h_exp / tf.square(dom_eigval)
+
 
 if __name__ == "__main__":
     # physical and bond dimensions of MPS
     phys_d = 2
     bond_d = 16
-
-    imps = Tfimps(phys_d, bond_d, symmetrize=True)
 
     # Pauli matrices. For now we avoid complex numbers
     X = tf.constant([[0,1],[1,0]], dtype=tf.float64)
@@ -138,7 +129,6 @@ if __name__ == "__main__":
     ZZ = tf.einsum('ij,kl->ikjl', Z, Z)
     X1 = (tf.einsum('ij,kl->ikjl', X, I) + tf.einsum('ij,kl->ikjl', I, X)) / 2
 
-
     # Heisenberg Hamiltonian
     # My impression is that staggered correlations go hand in hand with nonsymmetric A matrices
     h_xxx = XX + YY + ZZ
@@ -146,11 +136,14 @@ if __name__ == "__main__":
     # Ising Hamiltonian (at criticality). Exact energy is -4/pi=-1.27324...
     h_ising = - ZZ - X1
 
-    train_op = tf.train.AdamOptimizer(learning_rate = 0.005).minimize(imps.variational_e(h_ising))
+    # Initialize the MPS
+    imps = Tfimps(phys_d, bond_d, symmetrize=True, hamiltonian=h_ising)
+
+    train_op = tf.train.AdamOptimizer(learning_rate = 0.005).minimize(imps.variational_e)
 
     with tf.Session() as sess:
 
         sess.run(tf.global_variables_initializer())
 
         for i in range(200):
-            print(sess.run([imps.variational_e(h_ising), train_op])[0])
+            print(sess.run([imps.variational_e, train_op])[0])
