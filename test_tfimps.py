@@ -37,25 +37,29 @@ class TestTfimps(tf.test.TestCase):
         A1 = np.diag(np.random.rand(bond_d))
         A_matrices = np.array([A0, A1])
 
-        imps = tfimps.Tfimps(phys_d, bond_d, A_matrices)
+
         I = tf.eye(phys_d, dtype=tf.float64)
         h = tf.einsum('ij,kl->ikjl', I, I)
 
+        imps = tfimps.Tfimps(phys_d, bond_d, A_matrices, hamiltonian=h)
+
         with self.test_session() as sess:
             sess.run(tf.global_variables_initializer())
-            actual = sess.run(imps.variational_e(h))
+            actual = sess.run(imps.variational_e)
             self.assertAllClose(1, actual)
 
     def testIdentityHamiltonianHasEnergyOneRandomMPS(self):
         phys_d = 3
         bond_d = 5
-        imps = tfimps.Tfimps(phys_d, bond_d)
+
         I = tf.eye(phys_d, dtype=tf.float64)
         h = tf.einsum('ij,kl->ikjl', I, I)
 
+        imps = tfimps.Tfimps(phys_d, bond_d, hamiltonian=h)
+
         with self.test_session() as sess:
             sess.run(tf.global_variables_initializer())
-            actual = sess.run(imps.variational_e(h))
+            actual = sess.run(imps.variational_e)
             self.assertAllClose(1, actual)
 
     def testAKLTStateHasCorrectEnergy(self):
@@ -70,8 +74,6 @@ class TestTfimps(tf.test.TestCase):
         A0 = np.array([[-1/2, 0], [0, 1/2]])
         A_matrices = np.array([Aplus, A0, Aminus])
 
-        aklt = tfimps.Tfimps(phys_d, bond_d, A_matrices, symmetrize=False)
-
         # Spin 1 operators.
 
         X = tf.constant([[0, 1, 0 ], [1, 0, 1], [0, 1, 0]], dtype=tf.float64) / np.sqrt(2)
@@ -85,9 +87,11 @@ class TestTfimps(tf.test.TestCase):
         hberg = XX + YY + ZZ
         h_aklt = hberg + tf.einsum('abcd,cdef->abef', hberg, hberg) / 3
 
+        aklt = tfimps.Tfimps(phys_d, bond_d, A_matrices, symmetrize=False, hamiltonian=h_aklt)
+
         with self.test_session() as sess:
             sess.run(tf.global_variables_initializer())
-            aklt_energy = sess.run(aklt.variational_e(h_aklt))
+            aklt_energy = sess.run(aklt.variational_e)
             self.assertAllClose(-2/3, aklt_energy)
 
     def testAKLTStateHasCorrectCorrelations(self):
