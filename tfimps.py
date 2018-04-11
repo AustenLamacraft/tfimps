@@ -134,16 +134,18 @@ if __name__ == "__main__":
     h_xxx = XX + YY + ZZ
 
     # Ising Hamiltonian (at criticality). Exact energy is -4/pi=-1.27324...
-    h_ising = - ZZ - X1
+    h_ising = -ZZ - X1
 
     # Initialize the MPS
     imps = Tfimps(phys_d, bond_d, symmetrize=True, hamiltonian=h_ising)
 
-    train_op = tf.train.AdamOptimizer(learning_rate = 0.005).minimize(imps.variational_e)
+    # train_op = tf.train.AdamOptimizer(learning_rate = 0.01).minimize(imps.variational_e)
+    energy_gradients = tf.train.AdamOptimizer(learning_rate = 0.01).compute_gradients(imps.variational_e)
+    train_op = tf.train.AdamOptimizer(learning_rate = 0.01).apply_gradients(energy_gradients)
 
     with tf.Session() as sess:
 
         sess.run(tf.global_variables_initializer())
 
-        for i in range(200):
+        for i in range(100):
             print(sess.run([imps.variational_e, train_op])[0])
