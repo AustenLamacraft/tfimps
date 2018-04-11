@@ -81,6 +81,7 @@ class Tfimps:
     def _add_transfer_matrix(self):
         T = tf.einsum("sab,scd->acbd", self.A, self.A)
         T = tf.reshape(T, [self.bond_d**2, self.bond_d**2])
+        T = self._symmetrize(T)
         return T
 
     def _add_dominant_eig(self):
