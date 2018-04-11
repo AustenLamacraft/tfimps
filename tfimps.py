@@ -39,7 +39,7 @@ class Tfimps:
 
     def correlator(self, operator, range):
         """
-        Evaluate the correlation function of `operator` up to `range` sites.
+        Evaluate the correlation function of `operator` up to `range` sites..
 
         :param operator: Tensor of shape [phys_d, phys_d] giving single site operator.
         :param range: Maximum separation at which correlations required
@@ -75,7 +75,16 @@ class Tfimps:
 
         :return: The `bond_d` eigenvalues of the reduced density matrix
         """
-        pass
+        dom_eigval, dom_eigvec = self._dominant_eig
+        dom_eigmat = tf.reshape(dom_eigvec, [self.bond_d, self.bond_d])
+
+        # L should be Hermitian, because it's eigenvalues are the eigenvalues
+
+        # of the reduced density matrix....
+
+        eigvals = tf.self_adjoint_eigvals(dom_eigmat)
+
+        return eigvals / tf.reduce_sum(eigvals)
 
     # TODO Calculation of entanglement spectrum
     def _add_transfer_matrix(self):
