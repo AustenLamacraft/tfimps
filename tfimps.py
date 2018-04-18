@@ -1,5 +1,11 @@
 import numpy as np
 import tensorflow as tf
+import pymanopt as pmo
+
+from pymanopt.manifolds import Stiefel
+from pymanopt import Problem
+from pymanopt.solvers import ConjugateGradient
+
 #import tensorflow.contrib.eager as tfe
 #tfe.enable_eager_execution()
 
@@ -20,7 +26,10 @@ class Tfimps:
         self.bond_d = bond_d
 
         if A_matrices is None:
-            A_init = self._symmetrize(np.random.rand(phys_d, bond_d, bond_d))
+            self.mps_manifold = pmo.manifolds.Stiefel(phys_d * bond_d, bond_d)
+            A_init = tf.reshape(self.mps_manifold.rand(), [phys_d, bond_d, bond_d])
+
+            # A_init = self._symmetrize(np.random.rand(phys_d, bond_d, bond_d))
 
         else:
             A_init = A_matrices
@@ -145,5 +154,5 @@ if __name__ == "__main__":
 
         sess.run(tf.global_variables_initializer())
 
-        for i in range(200):
+        for i in range(100):
             print(sess.run([imps.variational_e, train_op])[0])
