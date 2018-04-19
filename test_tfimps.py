@@ -127,3 +127,37 @@ class TestTfimps(tf.test.TestCase):
             xx_eval = sess.run(aklt.correlator(Z, range))
             xx_exact = 12 / 9 * (-1/3)**np.arange(1,range)
             self.assertAllClose(xx_eval, xx_exact)
+
+    def testAKLTStateHasCorrectEnergyWithTwoSiteUnitCell(self):
+        phys_d = 3
+        bond_d = 2
+
+        # Follow Annals of Physics Volume 326, Issue 1, Pages 96-192.
+        # Note that even though the As are not symmetric, the transfer matrix is.
+
+        Aplus = np.array([[0, 1/np.sqrt(2)], [0, 0]])
+        Aminus = np.array([[0, 0], [-1/np.sqrt(2), 0]])
+        A0 = np.array([[-1/2, 0], [0, 1/2]])
+        A_matrices = np.array([Aplus, A0, Aminus])
+        B_matrices = A_matrices
+
+
+        # Spin 1 operators.
+
+        X = tf.constant([[0, 1, 0 ], [1, 0, 1], [0, 1, 0]], dtype=tf.float64) / np.sqrt(2)
+        iY = tf.constant([[0, -1, 0 ], [1, 0, -1], [0, 1, 0]], dtype=tf.float64) / np.sqrt(2)
+        Z = tf.constant([[1, 0, 0], [0, 0, 0], [0, 0, -1]], dtype=tf.float64)
+
+        XX = tf.einsum('ij,kl->ikjl', X, X)
+        YY = - tf.einsum('ij,kl->ikjl', iY, iY)
+        ZZ = tf.einsum('ij,kl->ikjl', Z, Z)
+
+        hberg = XX + YY + ZZ
+        h_aklt = hberg + tf.einsum('abcd,cdef->abef', hberg, hberg) / 3
+
+        aklt = tfimps.Tfimps(phys_d, bond_d, A_matrices, B_matrices, symmetrize=False, hamiltonian=h_aklt)
+
+        with self.test_session() as sess:
+            sess.run(tf.global_variables_initializer())
+            aklt_energy = sess.run(aklt.variational_e_2s)
+            self.assertAllClose(-2/3, aklt_energy)
