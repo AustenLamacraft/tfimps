@@ -146,10 +146,13 @@ if __name__ == "__main__":
 
     # Initialize the MPS
 
-    imps = Tfimps(phys_d, bond_d, hamiltonian=h_ising)
+
+    imps = Tfimps(phys_d, bond_d, hamiltonian=h_ising, symmetrize=False)
     problem = pymanopt.Problem(manifold=imps.mps_manifold, cost=imps.variational_e, arg=imps.A)
-    solver = pymanopt.solvers.ConjugateGradient()
-    Xopt = solver.solve(problem)
+    print(problem.grad)
+    # solver = pymanopt.solvers.ConjugateGradient()
+
+    # Xopt = solver.solve(problem)
 
     # imps = Tfimps(phys_d, bond_d, symmetrize=True, hamiltonian=h_ising)
     #
