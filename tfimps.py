@@ -28,7 +28,6 @@ class Tfimps:
         if A_matrices is None:
             self.mps_manifold = pmo.manifolds.Stiefel(phys_d * bond_d, bond_d)
             A_init = tf.reshape(self.mps_manifold.rand(), [phys_d, bond_d, bond_d])
-
             # A_init = self._symmetrize(np.random.rand(phys_d, bond_d, bond_d))
 
         else:

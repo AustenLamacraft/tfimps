@@ -4,6 +4,18 @@ import tfimps
 
 class TestTfimps(tf.test.TestCase):
 
+    def testMPSInLeftCanonicalForm(self):
+        phys_d = 2
+        bond_d = 3
+
+        imps = tfimps.Tfimps(phys_d, bond_d, symmetrize=False)
+
+        with self.test_session() as sess:
+            sess.run(tf.global_variables_initializer())
+            A = sess.run(imps.A)
+            self.assertAllClose(np.tensordot(A, A, axes=([0, 1], [0, 1])), np.identity(bond_d))
+
+
     def testTransferMatrixForIdentity(self):
         phys_d = 2
         bond_d = 2
