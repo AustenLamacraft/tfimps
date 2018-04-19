@@ -15,7 +15,6 @@ class TestTfimps(tf.test.TestCase):
             A = sess.run(imps.A)
             self.assertAllClose(np.tensordot(A, A, axes=([0, 1], [0, 1])), np.identity(bond_d))
 
-
     def testTransferMatrixForIdentity(self):
         phys_d = 2
         bond_d = 2

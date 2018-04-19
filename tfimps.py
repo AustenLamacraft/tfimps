@@ -1,10 +1,9 @@
 import numpy as np
 import tensorflow as tf
-import pymanopt as pmo
 
-from pymanopt.manifolds import Stiefel
-from pymanopt import Problem
-from pymanopt.solvers import ConjugateGradient
+import pymanopt
+import pymanopt.manifolds
+import pymanopt.solvers
 
 #import tensorflow.contrib.eager as tfe
 #tfe.enable_eager_execution()
@@ -25,8 +24,9 @@ class Tfimps:
         self.phys_d = phys_d
         self.bond_d = bond_d
 
+        self.mps_manifold = pymanopt.manifolds.Stiefel(phys_d * bond_d, bond_d)
+
         if A_matrices is None:
-            self.mps_manifold = pmo.manifolds.Stiefel(phys_d * bond_d, bond_d)
             A_init = tf.reshape(self.mps_manifold.rand(), [phys_d, bond_d, bond_d])
             # A_init = self._symmetrize(np.random.rand(phys_d, bond_d, bond_d))
 
@@ -145,13 +145,19 @@ if __name__ == "__main__":
     h_ising = - ZZ - X1
 
     # Initialize the MPS
-    imps = Tfimps(phys_d, bond_d, symmetrize=True, hamiltonian=h_ising)
 
-    train_op = tf.train.AdamOptimizer(learning_rate = 0.005).minimize(imps.variational_e)
+    imps = Tfimps(phys_d, bond_d, hamiltonian=h_ising)
+    problem = pymanopt.Problem(manifold=imps.mps_manifold, cost=imps.variational_e, arg=imps.A)
+    solver = pymanopt.solvers.ConjugateGradient()
+    Xopt = solver.solve(problem)
 
-    with tf.Session() as sess:
-
-        sess.run(tf.global_variables_initializer())
-
-        for i in range(100):
-            print(sess.run([imps.variational_e, train_op])[0])
+    # imps = Tfimps(phys_d, bond_d, symmetrize=True, hamiltonian=h_ising)
+    #
+    # train_op = tf.train.AdamOptimizer(learning_rate = 0.005).minimize(imps.variational_e)
+    #
+    # with tf.Session() as sess:
+    #
+    #     sess.run(tf.global_variables_initializer())
+    #
+    #     for i in range(100):
+    #         print(sess.run([imps.variational_e, train_op])[0])
