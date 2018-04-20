@@ -123,7 +123,7 @@ class Tfimps:
 if __name__ == "__main__":
     # physical and bond dimensions of MPS
     phys_d = 2
-    bond_d = 16
+    bond_d = 4
 
     # Pauli matrices. For now we avoid complex numbers
     X = tf.constant([[0,1],[1,0]], dtype=tf.float64)
@@ -149,7 +149,12 @@ if __name__ == "__main__":
 
     imps = Tfimps(phys_d, bond_d, hamiltonian=h_ising, symmetrize=False)
     problem = pymanopt.Problem(manifold=imps.mps_manifold, cost=imps.variational_e, arg=imps.A)
-    print(problem.grad)
+
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        print(sess.run(imps.A))
+
+        print(problem.cost(imps.A))
     # solver = pymanopt.solvers.ConjugateGradient()
 
     # Xopt = solver.solve(problem)
