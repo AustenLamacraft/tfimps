@@ -20,6 +20,7 @@ class Tfimps:
         :param bond_d: Bond dimension, the size of the A matrices.
         :param A_matrices: Square matrices of size `bond_d` forming the Matrix Product State.
         :param symmetrize: Boolean indicating A matrices are symmetrized.
+        :param hamiltonian: Tensor of shape [phys_d, phys_d, phys_d, phys_d] giving two site Hamiltonian
         """
         self.phys_d = phys_d
         self.bond_d = bond_d
@@ -39,6 +40,7 @@ class Tfimps:
             self.A = self._symmetrize(self.A)
 
         self._transfer_matrix = self._add_transfer_matrix()
+        self._right_eigenvector = self._add_right_eigenvector()
         self._all_eig = tf.self_adjoint_eig(self._transfer_matrix)
         self._dominant_eig = self._add_dominant_eig()
 
@@ -90,6 +92,14 @@ class Tfimps:
         T = tf.einsum("sab,scd->acbd", self.A, self.A)
         T = tf.reshape(T, [self.bond_d**2, self.bond_d**2])
         return T
+
+    def _add_right_eigenvector(self):
+        T = self._transfer_matrix
+        vec = tf.ones([self.bond_d ** 2], tf.float64)
+        next_vec = tf.einsum("ab,b->a", T, vec)
+        norm_small = lambda vec, next: tf.less(tf.norm(vec - next), 1e-5)
+        increment = lambda vec, next: (next, tf.einsum("ab,b->a", T, next))
+        return tf.while_loop(norm_small, increment, [vec, next_vec])
 
     def _add_dominant_eig(self):
         eigvals, eigvecs = self._all_eig
