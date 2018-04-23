@@ -1,9 +1,9 @@
 import numpy as np
-import tensorflow as tf
-
 import pymanopt
 import pymanopt.manifolds
 import pymanopt.solvers
+import tensorflow as tf
+
 
 #import tensorflow.contrib.eager as tfe
 #tfe.enable_eager_execution()
@@ -151,11 +151,15 @@ if __name__ == "__main__":
     problem = pymanopt.Problem(manifold=imps.mps_manifold, cost=imps.variational_e, arg=imps.A)
 
     with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        print(sess.run(imps.A))
 
-        print(problem.cost(imps.A))
-    # solver = pymanopt.solvers.ConjugateGradient()
+        point = sess.run(tf.reshape(imps.mps_manifold.rand(), [phys_d, bond_d, bond_d]))
+        print(problem.grad(point))
+    # with tf.Session() as sess:
+    #     sess.run(tf.global_variables_initializer())
+    #     print(sess.run(imps.A))
+    #
+    #     print(problem.cost(imps.A))
+    # # solver = pymanopt.solvers.ConjugateGradient()
 
     # Xopt = solver.solve(problem)
 
