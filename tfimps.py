@@ -97,9 +97,10 @@ class Tfimps:
         T = self._transfer_matrix
         vec = tf.ones([self.bond_d ** 2], tf.float64)
         next_vec = tf.einsum("ab,b->a", T, vec)
-        norm_small = lambda vec, next: tf.less(tf.norm(vec - next), 1e-5)
+        norm_big = lambda vec, next: tf.greater(tf.norm(vec - next), 1e-6)
         increment = lambda vec, next: (next, tf.einsum("ab,b->a", T, next))
-        return tf.while_loop(norm_small, increment, [vec, next_vec])
+        vec, next_vec = tf.while_loop(norm_big, increment, [vec, next_vec])
+        return next_vec
 
     def _add_dominant_eig(self):
         eigvals, eigvecs = self._all_eig
