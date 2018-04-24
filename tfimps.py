@@ -186,6 +186,8 @@ if __name__ == "__main__":
 
     with tf.Session() as sess:
         point = sess.run(tf.reshape(imps.mps_manifold.rand(), [phys_d, bond_d, bond_d]))
+        sess.run(tf.global_variables_initializer())
+        print(sess.run(imps.variational_energy))
 
     print(problem.grad(point))
     # with tf.Session() as sess:
