@@ -17,7 +17,7 @@ class TestTfimps(tf.test.TestCase):
 
     def testRightEigenvectorHasUnitEigenvalue(self):
         phys_d = 2
-        bond_d = 3
+        bond_d = 4
 
         imps = tfimps.Tfimps(phys_d, bond_d, symmetrize=False)
 
@@ -68,7 +68,7 @@ class TestTfimps(tf.test.TestCase):
 
         with self.test_session() as sess:
             sess.run(tf.global_variables_initializer())
-            actual = sess.run(imps.variational_e)
+            actual = sess.run(imps.variational_energy)
             self.assertAllClose(1, actual)
 
     def testIdentityHamiltonianHasEnergyOneRandomMPS(self):
@@ -82,7 +82,7 @@ class TestTfimps(tf.test.TestCase):
 
         with self.test_session() as sess:
             sess.run(tf.global_variables_initializer())
-            actual = sess.run(imps.variational_e)
+            actual = sess.run(imps.variational_energy)
             self.assertAllClose(1, actual)
 
     def testAKLTStateHasCorrectEnergy(self):
@@ -91,11 +91,12 @@ class TestTfimps(tf.test.TestCase):
 
         # Follow Annals of Physics Volume 326, Issue 1, Pages 96-192.
         # Note that even though the As are not symmetric, the transfer matrix is.
+        # We normalize these to be in left (and right) canonical form
 
         Aplus = np.array([[0, 1/np.sqrt(2)], [0, 0]])
         Aminus = np.array([[0, 0], [-1/np.sqrt(2), 0]])
         A0 = np.array([[-1/2, 0], [0, 1/2]])
-        A_matrices = np.array([Aplus, A0, Aminus])
+        A_matrices = np.array([Aplus, A0, Aminus]) * np.sqrt(4/3)
 
         # Spin 1 operators.
 
@@ -114,7 +115,7 @@ class TestTfimps(tf.test.TestCase):
 
         with self.test_session() as sess:
             sess.run(tf.global_variables_initializer())
-            aklt_energy = sess.run(aklt.variational_e)
+            aklt_energy = sess.run(aklt.variational_energy)
             self.assertAllClose(-2/3, aklt_energy)
 
     def testAKLTStateHasCorrectCorrelations(self):

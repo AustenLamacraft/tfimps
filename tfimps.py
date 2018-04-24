@@ -45,7 +45,10 @@ class Tfimps:
         self._dominant_eig = self._add_dominant_eig()
 
         if hamiltonian is not None:
-            self.variational_e = self._add_variational_e(hamiltonian)
+            if symmetrize:
+                self.variational_energy = self._add_variational_energy_symmetric_mps(hamiltonian)
+            else:
+                self.variational_energy = self._add_variational_energy_left_canonical_mps(hamiltonian)
 
     def correlator(self, operator, range):
         """
@@ -95,12 +98,15 @@ class Tfimps:
 
     def _add_right_eigenvector(self):
         T = self._transfer_matrix
-        vec = tf.ones([self.bond_d ** 2], tf.float64)
+        vec = tf.ones([self.bond_d ** 2], dtype=tf.float64)
         next_vec = tf.einsum("ab,b->a", T, vec)
         norm_big = lambda vec, next: tf.greater(tf.norm(vec - next), 1e-6)
         increment = lambda vec, next: (next, tf.einsum("ab,b->a", T, next))
         vec, next_vec = tf.while_loop(norm_big, increment, [vec, next_vec])
-        return next_vec
+        # Normalize using left vector
+        left_vec = tf.reshape(tf.eye(self.bond_d, dtype=tf.float64), [self.bond_d**2])
+        norm = tf.einsum('a,a->', left_vec, next_vec)
+        return next_vec / norm
 
     def _add_dominant_eig(self):
         eigvals, eigvecs = self._all_eig
@@ -113,9 +119,9 @@ class Tfimps:
         M_lower = tf.matrix_band_part(M, -1, 0) #takes the lower triangular part of M (including the diagonal)
         return (M_lower + tf.matrix_transpose(M_lower)) / 2
 
-    def _add_variational_e(self, hamiltonian):
+    def _add_variational_energy_symmetric_mps(self, hamiltonian):
         """
-        Evaluate the variational energy density.
+        Evaluate the variational energy density for symmetric MPS (not using canonical form)
 
         :param hamiltonian: Tensor of shape [phys_d, phys_d, phys_d, phys_d] giving two-site Hamiltonian.
             Adopt convention that first two indices are row, second two are column.
@@ -129,6 +135,23 @@ class Tfimps:
         h_exp = tf.einsum("stuv,stuv->", L_AAbar_AAbar_R, hamiltonian)
 
         return h_exp / tf.square(dom_eigval)
+
+    def _add_variational_energy_left_canonical_mps(self, hamiltonian):
+        """
+        Evaluate the variational energy density for MPS in left canonical form
+
+        :param hamiltonian: Tensor of shape [phys_d, phys_d, phys_d, phys_d] giving two-site Hamiltonian.
+            Adopt convention that first two indices are row, second two are column.
+        :return: Expectation value of the energy density.
+        """
+        right_eigenvector = self._right_eigenvector
+        right_eigenmatrix = tf.reshape(right_eigenvector, [self.bond_d, self.bond_d])
+        L_AAbar = tf.einsum("sab,tac->stbc", self.A, self.A)
+        AAbar_R = tf.einsum("uac,vbd,cd->uvab", self.A, self.A, right_eigenmatrix)
+        L_AAbar_AAbar_R = tf.einsum("stab,uvab->sutv", L_AAbar, AAbar_R)
+        h_exp = tf.einsum("stuv,stuv->", L_AAbar_AAbar_R, hamiltonian)
+
+        return h_exp
 
 
 if __name__ == "__main__":
@@ -159,7 +182,7 @@ if __name__ == "__main__":
 
 
     imps = Tfimps(phys_d, bond_d, hamiltonian=h_ising, symmetrize=False)
-    problem = pymanopt.Problem(manifold=imps.mps_manifold, cost=imps.variational_e, arg=imps.A)
+    problem = pymanopt.Problem(manifold=imps.mps_manifold, cost=imps.variational_energy, arg=imps.A)
 
     with tf.Session() as sess:
         point = sess.run(tf.reshape(imps.mps_manifold.rand(), [phys_d, bond_d, bond_d]))
