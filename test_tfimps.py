@@ -23,8 +23,8 @@ class TestTfimps(tf.test.TestCase):
 
         with self.test_session() as sess:
             sess.run(tf.global_variables_initializer())
-            T = sess.run(imps._transfer_matrix)
-            vec = sess.run(imps._right_eigenvector)
+            T = sess.run(imps.transfer_matrix)
+            vec = sess.run(imps.right_eigenvector)
             self.assertAllClose(T@vec, vec)
 
     def testTransferMatrixForIdentity(self):
@@ -38,7 +38,7 @@ class TestTfimps(tf.test.TestCase):
 
         with self.test_session() as sess:
             sess.run(tf.global_variables_initializer())
-            actual = sess.run(imps._transfer_matrix)
+            actual = sess.run(imps.transfer_matrix)
             self.assertAllClose(phys_d * np.identity(4), actual)
 
     def testDominantEigenvectorIsEigenvector(self):
@@ -48,7 +48,7 @@ class TestTfimps(tf.test.TestCase):
 
         with self.test_session() as sess:
             sess.run(tf.global_variables_initializer())
-            T = sess.run(imps._transfer_matrix)
+            T = sess.run(imps.transfer_matrix)
             val, vec = sess.run(imps._dominant_eig)
             self.assertAllClose(T@vec, val*vec)
 

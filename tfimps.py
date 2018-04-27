@@ -22,8 +22,12 @@ class Tfimps:
         :param symmetrize: Boolean indicating A matrices are symmetrized.
         :param hamiltonian: Tensor of shape [phys_d, phys_d, phys_d, phys_d] giving two site Hamiltonian
         """
+
+        self._session = tf.Session()
+
         self.phys_d = phys_d
         self.bond_d = bond_d
+        self.hamiltonian = hamiltonian
 
         self.mps_manifold = pymanopt.manifolds.Stiefel(phys_d * bond_d, bond_d)
 
@@ -39,10 +43,13 @@ class Tfimps:
         if symmetrize:
             self.A = self._symmetrize(self.A)
 
-        self._transfer_matrix = self._add_transfer_matrix()
-        self._right_eigenvector = self._add_right_eigenvector()
-        self._all_eig = tf.self_adjoint_eig(self._transfer_matrix)
-        self._dominant_eig = self._add_dominant_eig()
+        self._transfer_matrix = None
+        self._right_eigenvector = tf.ones([self.bond_d ** 2], dtype=tf.float64)
+
+        self._all_eig = tf.self_adjoint_eig(self.transfer_matrix)
+        self._dominant_eig = None
+
+        self._variational_energy = None
 
         if hamiltonian is not None:
             if symmetrize:
@@ -58,7 +65,7 @@ class Tfimps:
         :param range: Maximum separation at which correlations required
         :return: Correlation function
         """
-        dom_eigval, dom_eigvec = self._dominant_eig
+        dom_eigval, dom_eigvec = self.dominant_eig
         dom_eigmat = tf.reshape(dom_eigvec, [self.bond_d, self.bond_d])
         #
         eigval, eigvec = self._all_eig
@@ -91,33 +98,49 @@ class Tfimps:
         pass
 
     # TODO Calculation of entanglement spectrum
-    def _add_transfer_matrix(self):
-        T = tf.einsum("sab,scd->acbd", self.A, self.A)
-        T = tf.reshape(T, [self.bond_d**2, self.bond_d**2])
-        return T
 
-    def _add_right_eigenvector(self):
-        T = self._transfer_matrix
-        vec = tf.ones([self.bond_d ** 2], dtype=tf.float64)
+    @property
+    def transfer_matrix(self):
+        if self._transfer_matrix is None:
+            T = tf.einsum("sab,scd->acbd", self.A, self.A)
+            T = tf.reshape(T, [self.bond_d**2, self.bond_d**2])
+            self._transfer_matrix = T
+        return self._transfer_matrix
+
+    @property
+    def right_eigenvector(self):
+
+        feed_dict = {vec: guess}
+        return self._session.run(objective, feed_dict)
+
+        T = self.transfer_matrix
+        vec = self._right_eigenvector
         next_vec = tf.einsum("ab,b->a", T, vec)
         norm_big = lambda vec, next: tf.greater(tf.norm(vec - next), 1e-6)
         increment = lambda vec, next: (next, tf.einsum("ab,b->a", T, next))
         vec, next_vec = tf.while_loop(norm_big, increment, [vec, next_vec])
         # Normalize using left vector
-        left_vec = tf.reshape(tf.eye(self.bond_d, dtype=tf.float64), [self.bond_d**2])
+        left_vec = tf.reshape(tf.eye(self.bond_d, dtype=tf.float64), [self.bond_d ** 2])
         norm = tf.einsum('a,a->', left_vec, next_vec)
-        return next_vec / norm
+        self._right_eigenvector =  next_vec / norm
 
-    def _add_dominant_eig(self):
-        eigvals, eigvecs = self._all_eig
-        # We use cast to make the number an integer
-        idx = tf.cast(tf.argmax(tf.abs(eigvals)), dtype=np.int32)# Why do abs?
-        return eigvals[idx], eigvecs[:,idx] # Note that eigenvectors are given in columns, not rows!
+
+
+
+    @property
+    def dominant_eig(self):
+        if self._dominant_eig is None:
+            eigvals, eigvecs = self._all_eig
+            # We use cast to make the number an integer
+            idx = tf.cast(tf.argmax(tf.abs(eigvals)), dtype=np.int32)# Why do abs?
+            self._dominant_eig = eigvals[idx], eigvecs[:,idx] # Note that eigenvectors are given in columns, not rows!
+        return self._dominant_eig
 
     def _symmetrize(self, M):
         # Symmetrize -- sufficient to guarantee transfer matrix is symmetric (but not necessary)
         M_lower = tf.matrix_band_part(M, -1, 0) #takes the lower triangular part of M (including the diagonal)
         return (M_lower + tf.matrix_transpose(M_lower)) / 2
+
 
     def _add_variational_energy_symmetric_mps(self, hamiltonian):
         """
@@ -127,7 +150,7 @@ class Tfimps:
             Adopt convention that first two indices are row, second two are column.
         :return: Expectation value of the energy density.
         """
-        dom_eigval, dom_eigvec = self._dominant_eig
+        dom_eigval, dom_eigvec = self.dominant_eig
         dom_eigmat = tf.reshape(dom_eigvec, [self.bond_d, self.bond_d])
         L_AAbar = tf.einsum("ab,sac,tbd->stcd", dom_eigmat, self.A, self.A)
         AAbar_R = tf.einsum("uac,vbd,cd->uvab", self.A, self.A, dom_eigmat)
@@ -144,8 +167,7 @@ class Tfimps:
             Adopt convention that first two indices are row, second two are column.
         :return: Expectation value of the energy density.
         """
-        right_eigenvector = self._right_eigenvector
-        right_eigenmatrix = tf.reshape(right_eigenvector, [self.bond_d, self.bond_d])
+        right_eigenmatrix = tf.reshape(self.right_eigenvector(), [self.bond_d, self.bond_d])
         L_AAbar = tf.einsum("sab,tac->stbc", self.A, self.A)
         AAbar_R = tf.einsum("uac,vbd,cd->uvab", self.A, self.A, right_eigenmatrix)
         L_AAbar_AAbar_R = tf.einsum("stab,uvab->sutv", L_AAbar, AAbar_R)
