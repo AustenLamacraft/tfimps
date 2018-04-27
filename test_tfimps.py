@@ -49,7 +49,7 @@ class TestTfimps(tf.test.TestCase):
         with self.test_session() as sess:
             sess.run(tf.global_variables_initializer())
             T = sess.run(imps.transfer_matrix)
-            val, vec = sess.run(imps._dominant_eig)
+            val, vec = sess.run(imps.dominant_eig)
             self.assertAllClose(T@vec, val*vec)
 
     def testIdentityHamiltonianHasEnergyOneDiagonalMPS(self):

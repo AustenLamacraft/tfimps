@@ -44,7 +44,7 @@ class Tfimps:
             self.A = self._symmetrize(self.A)
 
         self._transfer_matrix = None
-        self._right_eigenvector = tf.ones([self.bond_d ** 2], dtype=tf.float64)
+        self._right_eigenvector = None
 
         self._all_eig = tf.self_adjoint_eig(self.transfer_matrix)
         self._dominant_eig = None
@@ -109,22 +109,19 @@ class Tfimps:
 
     @property
     def right_eigenvector(self):
-
-        feed_dict = {vec: guess}
-        return self._session.run(objective, feed_dict)
-
-        T = self.transfer_matrix
-        vec = self._right_eigenvector
-        next_vec = tf.einsum("ab,b->a", T, vec)
-        norm_big = lambda vec, next: tf.greater(tf.norm(vec - next), 1e-6)
-        increment = lambda vec, next: (next, tf.einsum("ab,b->a", T, next))
-        vec, next_vec = tf.while_loop(norm_big, increment, [vec, next_vec])
-        # Normalize using left vector
-        left_vec = tf.reshape(tf.eye(self.bond_d, dtype=tf.float64), [self.bond_d ** 2])
-        norm = tf.einsum('a,a->', left_vec, next_vec)
-        self._right_eigenvector =  next_vec / norm
-
-
+        if self._right_eigenvector is None:
+            self._right_eigenvector = tf.ones([self.bond_d ** 2], dtype=tf.float64)
+            T = self.transfer_matrix
+            vec = self._right_eigenvector
+            next_vec = tf.einsum("ab,b->a", T, vec)
+            norm_big = lambda vec, next: tf.greater(tf.norm(vec - next), 1e-6)
+            increment = lambda vec, next: (next, tf.einsum("ab,b->a", T, next))
+            vec, next_vec = tf.while_loop(norm_big, increment, [vec, next_vec])
+            # Normalize using left vector
+            left_vec = tf.reshape(tf.eye(self.bond_d, dtype=tf.float64), [self.bond_d ** 2])
+            norm = tf.einsum('a,a->', left_vec, next_vec)
+            self._right_eigenvector =  next_vec / norm
+        return self._right_eigenvector
 
 
     @property
@@ -167,7 +164,7 @@ class Tfimps:
             Adopt convention that first two indices are row, second two are column.
         :return: Expectation value of the energy density.
         """
-        right_eigenmatrix = tf.reshape(self.right_eigenvector(), [self.bond_d, self.bond_d])
+        right_eigenmatrix = tf.reshape(self.right_eigenvector, [self.bond_d, self.bond_d])
         L_AAbar = tf.einsum("sab,tac->stbc", self.A, self.A)
         AAbar_R = tf.einsum("uac,vbd,cd->uvab", self.A, self.A, right_eigenmatrix)
         L_AAbar_AAbar_R = tf.einsum("stab,uvab->sutv", L_AAbar, AAbar_R)
@@ -211,7 +208,9 @@ if __name__ == "__main__":
         sess.run(tf.global_variables_initializer())
         print(sess.run(imps.variational_energy))
 
+
     print(problem.grad(point))
+
     # with tf.Session() as sess:
     #     sess.run(tf.global_variables_initializer())
     #     print(sess.run(imps.A))
