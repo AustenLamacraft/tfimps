@@ -110,9 +110,8 @@ class Tfimps:
     @property
     def right_eigenvector(self):
         if self._right_eigenvector is None:
-            self._right_eigenvector = tf.ones([self.bond_d ** 2], dtype=tf.float64)
             T = self.transfer_matrix
-            vec = self._right_eigenvector
+            vec = tf.ones([self.bond_d ** 2], dtype=tf.float64)
             next_vec = tf.einsum("ab,b->a", T, vec)
             norm_big = lambda vec, next: tf.greater(tf.norm(vec - next), 1e-6)
             increment = lambda vec, next: (next, tf.einsum("ab,b->a", T, next))
@@ -201,15 +200,18 @@ if __name__ == "__main__":
 
 
     imps = Tfimps(phys_d, bond_d, hamiltonian=h_ising, symmetrize=False)
-    problem = pymanopt.Problem(manifold=imps.mps_manifold, cost=imps.variational_energy, arg=imps.A)
+    problem = pymanopt.Problem(manifold=imps.mps_manifold, cost=imps.variational_energy,
+                               arg=imps.A)
+
+    learning_rate = 0.001
 
     with tf.Session() as sess:
         point = sess.run(tf.reshape(imps.mps_manifold.rand(), [phys_d, bond_d, bond_d]))
         sess.run(tf.global_variables_initializer())
-        print(sess.run(imps.variational_energy))
-
-
-    print(problem.grad(point))
+        print(problem.cost(point))
+        solver = pymanopt.solvers.SteepestDescent()
+        Xopt = solver.solve(problem)
+        print(Xopt)
 
     # with tf.Session() as sess:
     #     sess.run(tf.global_variables_initializer())
