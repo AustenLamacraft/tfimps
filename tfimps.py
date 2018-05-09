@@ -31,6 +31,7 @@ class Tfimps:
 
         self.mps_manifold = pymanopt.manifolds.Stiefel(phys_d * bond_d, bond_d)
 
+        # Define the A
         if A_matrices is None:
             A_init = tf.reshape(self.mps_manifold.rand(), [phys_d, bond_d, bond_d])
             # A_init = self._symmetrize(np.random.rand(phys_d, bond_d, bond_d))
@@ -38,7 +39,13 @@ class Tfimps:
         else:
             A_init = A_matrices
 
-        self.A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
+        # Create Stiefel from the A
+        Stiefel_init = tf.reshape(A_init, [self.phys_d * self.bond_d, self.bond_d])
+
+        # Define the variational tensor variable Stiefel
+        # self.A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
+        self.Stiefel = tf.get_variable("Stiefel_matrix", initializer=Stiefel_init, trainable=True)
+        self.A = tf.reshape(self.Stiefel, [self.phys_d, self.bond_d, self.bond_d])
 
         if symmetrize:
             self.A = self._symmetrize(self.A)
@@ -113,7 +120,7 @@ class Tfimps:
             T = self.transfer_matrix
             vec = tf.ones([self.bond_d ** 2], dtype=tf.float64)
             next_vec = tf.einsum("ab,b->a", T, vec)
-            norm_big = lambda vec, next: tf.greater(tf.norm(vec - next), 1e-6)
+            norm_big = lambda vec, next: tf.greater(tf.norm(vec - next), 1e-7)
             increment = lambda vec, next: (next, tf.einsum("ab,b->a", T, next))
             vec, next_vec = tf.while_loop(norm_big, increment, [vec, next_vec])
             # Normalize using left vector
@@ -201,15 +208,16 @@ if __name__ == "__main__":
 
     imps = Tfimps(phys_d, bond_d, hamiltonian=h_ising, symmetrize=False)
     problem = pymanopt.Problem(manifold=imps.mps_manifold, cost=imps.variational_energy,
-                               arg=imps.A)
+                               arg=imps.Stiefel)
 
-    learning_rate = 0.001
+    # learning_rate = 0.001
 
     with tf.Session() as sess:
-        point = sess.run(tf.reshape(imps.mps_manifold.rand(), [phys_d, bond_d, bond_d]))
+        # point = sess.run(tf.reshape(imps.mps_manifold.rand(), [phys_d, bond_d, bond_d]))
         sess.run(tf.global_variables_initializer())
-        print(problem.cost(point))
-        solver = pymanopt.solvers.SteepestDescent()
+        # print(problem.cost(point))
+        # solver = pymanopt.solvers.SteepestDescent(maxiter=5000,mingradnorm=1e-6)
+        solver = pymanopt.solvers.ConjugateGradient(maxiter=5000, mingradnorm=1e-6)
         Xopt = solver.solve(problem)
         print(Xopt)
 
