@@ -217,7 +217,7 @@ if __name__ == "__main__":
         sess.run(tf.global_variables_initializer())
         # print(problem.cost(point))
         # solver = pymanopt.solvers.SteepestDescent(maxiter=5000,mingradnorm=1e-6)
-        solver = pymanopt.solvers.ConjugateGradient(maxiter=5000, mingradnorm=1e-6)
+        solver = pymanopt.solvers.ConjugateGradient(maxiter=5000, mingradnorm=1e-10,minstepsize=1e-10)
         Xopt = solver.solve(problem)
         print(Xopt)
 
