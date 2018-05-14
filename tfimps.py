@@ -31,6 +31,7 @@ class Tfimps:
 
         self.mps_manifold = pymanopt.manifolds.Stiefel(phys_d * bond_d, bond_d)
 
+        # Define the A
         if A_matrices is None:
             A_init = tf.reshape(self.mps_manifold.rand(), [phys_d, bond_d, bond_d])
             # A_init = self._symmetrize(np.random.rand(phys_d, bond_d, bond_d))
@@ -38,7 +39,13 @@ class Tfimps:
         else:
             A_init = A_matrices
 
-        self.A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
+        # Create Stiefel from the A
+        Stiefel_init = tf.reshape(A_init, [self.phys_d * self.bond_d, self.bond_d])
+
+        # Define the variational tensor variable Stiefel
+        # self.A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
+        self.Stiefel = tf.get_variable("Stiefel_matrix", initializer=Stiefel_init, trainable=True)
+        self.A = tf.reshape(self.Stiefel, [self.phys_d, self.bond_d, self.bond_d])
 
         if symmetrize:
             self.A = self._symmetrize(self.A)
@@ -113,7 +120,7 @@ class Tfimps:
             T = self.transfer_matrix
             vec = tf.ones([self.bond_d ** 2], dtype=tf.float64)
             next_vec = tf.einsum("ab,b->a", T, vec)
-            norm_big = lambda vec, next: tf.greater(tf.norm(vec - next), 1e-6)
+            norm_big = lambda vec, next: tf.greater(tf.norm(vec - next), 1e-7)
             increment = lambda vec, next: (next, tf.einsum("ab,b->a", T, next))
             vec, next_vec = tf.while_loop(norm_big, increment, [vec, next_vec])
             # Normalize using left vector
@@ -173,45 +180,72 @@ class Tfimps:
 
 
 if __name__ == "__main__":
-    # physical and bond dimensions of MPS
-    phys_d = 2
-    bond_d = 4
+    # # physical and bond dimensions of MPS
+    # phys_d = 2
+    # bond_d = 4
+    #
+    # # Pauli matrices. For now we avoid complex numbers
+    # X = tf.constant([[0,1],[1,0]], dtype=tf.float64)
+    # iY = tf.constant([[0,1],[-1,0]], dtype=tf.float64)
+    # Z = tf.constant([[1,0],[0,-1]], dtype=tf.float64)
+    #
+    # I = tf.eye(phys_d, dtype=tf.float64)
+    #
+    # XX = tf.einsum('ij,kl->ikjl', X, X)
+    # YY = - tf.einsum('ij,kl->ikjl', iY, iY)
+    # ZZ = tf.einsum('ij,kl->ikjl', Z, Z)
+    # X1 = (tf.einsum('ij,kl->ikjl', X, I) + tf.einsum('ij,kl->ikjl', I, X)) / 2
+    #
+    # # Heisenberg Hamiltonian
+    # # My impression is that staggered correlations go hand in hand with nonsymmetric A matrices
+    # h_xxx = XX + YY + ZZ
+    #
+    # # Ising Hamiltonian (at criticality). Exact energy is -4/pi=-1.27324...
+    # h_ising = - ZZ - X1
 
-    # Pauli matrices. For now we avoid complex numbers
-    X = tf.constant([[0,1],[1,0]], dtype=tf.float64)
-    iY = tf.constant([[0,1],[-1,0]], dtype=tf.float64)
-    Z = tf.constant([[1,0],[0,-1]], dtype=tf.float64)
+    phys_d = 3
+    bond_d = 2
 
-    I = tf.eye(phys_d, dtype=tf.float64)
+    # Follow Annals of Physics Volume 326, Issue 1, Pages 96-192.
+    # Note that even though the As are not symmetric, the transfer matrix is.
+    # We normalize these to be in left (and right) canonical form
+
+    Aplus = np.array([[0, 1 / np.sqrt(2)], [0, 0]])
+    Aminus = np.array([[0, 0], [-1 / np.sqrt(2), 0]])
+    A0 = np.array([[-1 / 2, 0], [0, 1 / 2]])
+    A_matrices = np.array([Aplus, A0, Aminus]) * np.sqrt(4 / 3)
+
+    # Spin 1 operators.
+
+    X = tf.constant([[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=tf.float64) / np.sqrt(2)
+    iY = tf.constant([[0, -1, 0], [1, 0, -1], [0, 1, 0]], dtype=tf.float64) / np.sqrt(2)
+    Z = tf.constant([[1, 0, 0], [0, 0, 0], [0, 0, -1]], dtype=tf.float64)
 
     XX = tf.einsum('ij,kl->ikjl', X, X)
     YY = - tf.einsum('ij,kl->ikjl', iY, iY)
     ZZ = tf.einsum('ij,kl->ikjl', Z, Z)
-    X1 = (tf.einsum('ij,kl->ikjl', X, I) + tf.einsum('ij,kl->ikjl', I, X)) / 2
 
-    # Heisenberg Hamiltonian
-    # My impression is that staggered correlations go hand in hand with nonsymmetric A matrices
-    h_xxx = XX + YY + ZZ
-
-    # Ising Hamiltonian (at criticality). Exact energy is -4/pi=-1.27324...
-    h_ising = - ZZ - X1
+    hberg = XX + YY + ZZ
+    h_aklt = hberg + tf.einsum('abcd,cdef->abef', hberg, hberg) / 3
 
     # Initialize the MPS
 
 
-    imps = Tfimps(phys_d, bond_d, hamiltonian=h_ising, symmetrize=False)
+    imps = Tfimps(phys_d, bond_d, hamiltonian=h_aklt, symmetrize=False)
     problem = pymanopt.Problem(manifold=imps.mps_manifold, cost=imps.variational_energy,
-                               arg=imps.A)
+                               arg=imps.Stiefel)
 
-    learning_rate = 0.001
+    # learning_rate = 0.001
 
     with tf.Session() as sess:
-        point = sess.run(tf.reshape(imps.mps_manifold.rand(), [phys_d, bond_d, bond_d]))
+        # point = sess.run(tf.reshape(imps.mps_manifold.rand(), [phys_d, bond_d, bond_d]))
         sess.run(tf.global_variables_initializer())
-        print(problem.cost(point))
-        solver = pymanopt.solvers.SteepestDescent()
+        # print(problem.cost(point))
+        # solver = pymanopt.solvers.SteepestDescent(maxiter=5000,mingradnorm=1e-6)
+        solver = pymanopt.solvers.ConjugateGradient(maxiter=5000, mingradnorm=1e-10,minstepsize=1e-10)
         Xopt = solver.solve(problem)
         print(Xopt)
+        print(problem.cost(Xopt))
 
     # with tf.Session() as sess:
     #     sess.run(tf.global_variables_initializer())
