@@ -94,6 +94,32 @@ class Tfimps:
 
         return ss_list
 
+    def correlator_left_canonical_mps(self, operator, range):
+
+        right_eigenmatrix = tf.reshape(self.right_eigenvector, [self.bond_d, self.bond_d])
+        AAbar = tf.einsum("sab,tac->stbc", self.A, self.A)
+        AAbar_R = tf.einsum("udf,veg,fg->uvde", self.A, self.A, right_eigenmatrix)
+        #
+        T = tf.einsum("sab,scd->acbd", self.A, self.A)
+        i = tf.constant(0)
+        iden = tf.einsum("bd,ce->bcde", tf.eye(self.bond_d,dtype=tf.float64),tf.eye(self.bond_d,dtype=tf.float64))
+        # condition = lambda i, next: tf.less(i, 4)  # The power, minus 1 becouse next_X is T already
+        # body = lambda i, next: (tf.add(i, 1), tf.einsum("abcd,cdef->abef", T, next))
+        # i_fin, T_pow = tf.while_loop(condition, body, [i, next_T])
+        #
+        # correlator = tf.einsum("stbc,st,bcde,uvde,uv->", AAbar, operator, T_pow, AAbar_R, operator)
+        #
+        ss_list = []
+        for n in np.arange(0, range):
+            condition = lambda i, next: tf.less(i, n)
+            body = lambda i, next: (tf.add(i, 1), tf.einsum("abcd,cdef->abef", T, next))
+            i_fin, T_pow = tf.while_loop(condition, body, [i, iden])
+            # No need for normalization in the LCF
+            we = tf.einsum("stbc,st,bcde,uvde,uv->", AAbar, operator, T_pow, AAbar_R, operator)
+            ss_list.append(we)
+
+        return ss_list
+
     @property
     def entanglement_spectrum(self):
         """
