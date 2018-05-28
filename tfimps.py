@@ -232,7 +232,7 @@ class Tfimps:
 
 
 if __name__ == "__main__":
-    #################################
+    #################################s
     # TRANSVERSE FIELD ISING
     #################################
     # physical and bond dimensions of MPS
