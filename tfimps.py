@@ -14,7 +14,7 @@ class Tfimps:
     """
 
     # TODO Allow for two-site unit cell and average energy between A_1 A_2 and A_2 A_1 ordering
-    def __init__(self, phys_d, bond_d, A_matrices=None, symmetrize=True, hamiltonian=None):
+    def __init__(self, r_prec, phys_d, bond_d, A_matrices=None, symmetrize=True, hamiltonian=None):
         """
         :param phys_d: Physical dimension of the state e.g. 2 for spin-1/2 systems.
         :param bond_d: Bond dimension, the size of the A matrices.
@@ -25,6 +25,7 @@ class Tfimps:
 
         self._session = tf.Session()
 
+        self.r_prec = r_prec
         self.phys_d = phys_d
         self.bond_d = bond_d
         self.hamiltonian = hamiltonian
@@ -44,7 +45,7 @@ class Tfimps:
 
         # Define the variational tensor variable Stiefel
         # self.A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
-        self.Stiefel = tf.get_variable("Stiefel_matrix", initializer=Stiefel_init, trainable=True)
+        self.Stiefel = tf.get_variable("Stiefel_matrix", initializer=Stiefel_init, trainable=True,dtype=tf.float64)
         self.A = tf.reshape(self.Stiefel, [self.phys_d, self.bond_d, self.bond_d])
 
         if symmetrize:
@@ -149,7 +150,10 @@ class Tfimps:
             T = self.transfer_matrix
             vec = tf.ones([self.bond_d ** 2], dtype=tf.float64)
             next_vec = tf.einsum("ab,b->a", T, vec)
-            norm_big = lambda vec, next: tf.greater(tf.norm(vec - next), 1e-7)
+            # norm_big = lambda vec, next: tf.greater(tf.norm(vec - next), 1e-7)
+            # CONDITION ON THE CHANGE OF VECTOR ELEMENTS, INSTEAD OF CHANGE OF THE NORM: r_prec
+            norm_big = lambda vec, next: tf.reduce_all(
+                tf.greater(tf.abs(vec - next), tf.constant(self.r_prec, shape=[self.bond_d ** 2], dtype=tf.float64)))
             increment = lambda vec, next: (next, tf.einsum("ab,b->a", T, next))
             vec, next_vec = tf.while_loop(norm_big, increment, [vec, next_vec])
             # Normalize using left vector
@@ -228,20 +232,21 @@ class Tfimps:
 
 
 if __name__ == "__main__":
-
-    ####################################
-    # HEISENBERG & ISING AT CRITICALLITY (h=1/2, lambda=1/2h=1)
-    #####################################
-
+    #################################
+    # TRANSVERSE FIELD ISING
+    #################################
     # physical and bond dimensions of MPS
     phys_d = 2
-    # bond_d = 4
-    bond_d = 25
+    bond_d = 4
+    r_prec = 1e-14 #convergence condition for right eigenvector
+    # Hamiltonian parameters
+    J = 1
+    h = 0.48
 
     # Pauli spin=1/2 matrices. For now we avoid complex numbers
-    X = tf.constant([[0,1],[1,0]], dtype=tf.float64)
-    iY = tf.constant([[0,1],[-1,0]], dtype=tf.float64)
-    Z = tf.constant([[1,0],[0,-1]], dtype=tf.float64)
+    X = tf.constant([[0, 1], [1, 0]], dtype=tf.float64)
+    iY = tf.constant([[0, 1], [-1, 0]], dtype=tf.float64)
+    Z = tf.constant([[1, 0], [0, -1]], dtype=tf.float64)
 
     I = tf.eye(phys_d, dtype=tf.float64)
 
@@ -255,16 +260,13 @@ if __name__ == "__main__":
     # My impression is that staggered correlations go hand in hand with nonsymmetric A matrices
     h_xxx = XX + YY + ZZ
 
-    J=1
-    # h=J/2
-    h = 0.48
-
+    h_zz = tf.constant(J / 4, dtype=tf.float64)
+    h_x1 = tf.constant(h / 2, dtype=tf.float64)
     # Ising Hamiltonian (at criticality). Exact energy is -4/pi=-1.27324...
-    h_ising = -(J/4)* ZZ -(h/2)* X1
+    h_ising = -h_zz * ZZ - h_x1 * X1
+    # h_ising = - ZZ - X1
 
-    #################################
-    # TRANSVERSE FIELD ISING
-    #################################
+
 
     #################################
     #AKLT
@@ -272,7 +274,8 @@ if __name__ == "__main__":
 
     # phys_d = 3
     # bond_d = 2
-    #
+    # r_prec = 1e-14
+
     # # Follow Annals of Physics Volume 326, Issue 1, Pages 96-192.
     # # Note that even though the As are not symmetric, the transfer matrix is.
     # # We normalize these to be in left (and right) canonical form
@@ -301,7 +304,7 @@ if __name__ == "__main__":
     # Initialize the MPS
 
 
-    imps = Tfimps(phys_d, bond_d, hamiltonian=h_ising, symmetrize=False)
+    imps = Tfimps(r_prec, phys_d,bond_d, hamiltonian=h_ising, symmetrize=False)
     problem = pymanopt.Problem(manifold=imps.mps_manifold, cost=imps.variational_energy,
                                arg=imps.Stiefel)
 
@@ -312,7 +315,8 @@ if __name__ == "__main__":
         sess.run(tf.global_variables_initializer())
         # print(problem.cost(point))
         # solver = pymanopt.solvers.SteepestDescent(maxiter=5000,mingradnorm=1e-6)
-        solver = pymanopt.solvers.ConjugateGradient(maxiter=5000, mingradnorm=1e-10,minstepsize=1e-10)
+        solver = pymanopt.solvers.ConjugateGradient(maxtime=float('inf'), maxiter=100000, mingradnorm=1e-20,
+                                                    minstepsize=1e-20)
         Xopt = solver.solve(problem)
         print(Xopt)
         print(problem.cost(Xopt))
