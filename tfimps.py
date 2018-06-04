@@ -45,7 +45,7 @@ class Tfimps:
 
         # Define the variational tensor variable Stiefel
         # self.A = tf.get_variable("A_matrices", initializer=A_init, trainable=True)
-        self.Stiefel = tf.get_variable("Stiefel_matrix", initializer=Stiefel_init, trainable=True,dtype=tf.float64)
+        self.Stiefel = tf.get_variable("Stiefel_matrix", initializer=Stiefel_init, trainable=True, dtype=tf.float64)
         self.A = tf.reshape(self.Stiefel, [self.phys_d, self.bond_d, self.bond_d])
 
         if symmetrize:
@@ -152,9 +152,9 @@ class Tfimps:
             next_vec = tf.einsum("ab,b->a", T, vec)
             # norm_big = lambda vec, next: tf.greater(tf.norm(vec - next), 1e-7)
             # CONDITION ON THE CHANGE OF VECTOR ELEMENTS, INSTEAD OF CHANGE OF THE NORM: r_prec
-            norm_big = lambda vec, next: tf.reduce_all(
-                tf.greater(tf.abs(vec - next), tf.constant(self.r_prec, shape=[self.bond_d ** 2], dtype=tf.float64)))
-            increment = lambda vec, next: (next, tf.einsum("ab,b->a", T, next))
+            norm_big = lambda v1, v2: tf.reduce_all(
+                tf.greater(tf.abs(v1 - v2), tf.constant(self.r_prec, shape=[self.bond_d ** 2], dtype=tf.float64)))
+            increment = lambda v1, v2: (v2, tf.einsum("ab,b->a", T, v2))
             vec, next_vec = tf.while_loop(norm_big, increment, [vec, next_vec])
             # Normalize using left vector
             left_vec = tf.reshape(tf.eye(self.bond_d, dtype=tf.float64), [self.bond_d ** 2])
