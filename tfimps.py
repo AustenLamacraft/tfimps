@@ -147,19 +147,11 @@ class Tfimps:
     @property
     def right_eigenvector(self):
         if self._right_eigenvector is None:
-            T = self.transfer_matrix
-            vec = tf.ones([self.bond_d ** 2], dtype=tf.float64)
-            next_vec = tf.einsum("ab,b->a", T, vec)
-            # norm_big = lambda vec, next: tf.greater(tf.norm(vec - next), 1e-7)
-            # CONDITION ON THE CHANGE OF VECTOR ELEMENTS, INSTEAD OF CHANGE OF THE NORM: r_prec
-            norm_big = lambda v1, v2: tf.reduce_any(
-                tf.greater(tf.abs(v1 - v2), tf.constant(self.r_prec, shape=[self.bond_d ** 2], dtype=tf.float64)))
-            increment = lambda v1, v2: (v2, tf.einsum("ab,b->a", T, v2))
-            vec, next_vec = tf.while_loop(norm_big, increment, [vec, next_vec])
+            self._right_eigenvector = self._right_eigenvector_power_method(self.transfer_matrix)
             # Normalize using left vector
             left_vec = tf.reshape(tf.eye(self.bond_d, dtype=tf.float64), [self.bond_d ** 2])
-            norm = tf.einsum('a,a->', left_vec, next_vec)
-            self._right_eigenvector =  next_vec / norm
+            norm = tf.einsum('a,a->', left_vec, self._right_eigenvector)
+            self._right_eigenvector = self._right_eigenvector / norm
         return self._right_eigenvector
 
 
@@ -229,6 +221,19 @@ class Tfimps:
         h_exp_onsite = tf.einsum("sab,tac,bc,st->", self.A, self.A, right_eigenmatrix, h_onsite)
 
         return h_exp_NN + h_exp_onsite
+
+    def _right_eigenvector_power_method(self, T):
+        dim = T.shape[0]
+        vec = tf.ones([dim], dtype=tf.float64)
+        next_vec = tf.einsum("ab,b->a", T, vec)
+        # norm_big = lambda vec, next: tf.greater(tf.norm(vec - next), 1e-7)
+        # CONDITION ON THE CHANGE OF VECTOR ELEMENTS, INSTEAD OF CHANGE OF THE NORM: r_prec
+        norm_big = lambda v1, v2: tf.reduce_any(
+            tf.greater(tf.abs(v1 - v2), tf.constant(self.r_prec, shape=[dim], dtype=tf.float64)))
+        increment = lambda v1, v2: (v2, tf.einsum("ab,b->a", T, v2))
+        vec, next_vec = tf.while_loop(norm_big, increment, [vec, next_vec])
+        return next_vec  # Not normalized
+
 
 
 if __name__ == "__main__":
