@@ -152,7 +152,7 @@ class Tfimps:
             next_vec = tf.einsum("ab,b->a", T, vec)
             # norm_big = lambda vec, next: tf.greater(tf.norm(vec - next), 1e-7)
             # CONDITION ON THE CHANGE OF VECTOR ELEMENTS, INSTEAD OF CHANGE OF THE NORM: r_prec
-            norm_big = lambda v1, v2: tf.reduce_all(
+            norm_big = lambda v1, v2: tf.reduce_any(
                 tf.greater(tf.abs(v1 - v2), tf.constant(self.r_prec, shape=[self.bond_d ** 2], dtype=tf.float64)))
             increment = lambda v1, v2: (v2, tf.einsum("ab,b->a", T, v2))
             vec, next_vec = tf.while_loop(norm_big, increment, [vec, next_vec])
