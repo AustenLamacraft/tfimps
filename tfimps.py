@@ -5,8 +5,7 @@ import pymanopt.solvers
 import tensorflow as tf
 
 
-#import tensorflow.contrib.eager as tfe
-#tfe.enable_eager_execution()
+
 
 class Tfimps:
     """
@@ -103,11 +102,6 @@ class Tfimps:
         T = tf.einsum("sab,scd->acbd", self.A, self.A)
         i = tf.constant(0)
         iden = tf.einsum("bd,ce->bcde", tf.eye(self.bond_d,dtype=tf.float64),tf.eye(self.bond_d,dtype=tf.float64))
-        # condition = lambda i, next: tf.less(i, 4)  # The power, minus 1 becouse next_X is T already
-        # body = lambda i, next: (tf.add(i, 1), tf.einsum("abcd,cdef->abef", T, next))
-        # i_fin, T_pow = tf.while_loop(condition, body, [i, next_T])
-        #
-        # correlator = tf.einsum("stbc,st,bcde,uvde,uv->", AAbar, operator, T_pow, AAbar_R, operator)
         #
         ss_list = []
         for n in np.arange(0, range):
@@ -119,6 +113,14 @@ class Tfimps:
             ss_list.append(we)
 
         return ss_list
+
+    def single_site_expectation_value_left_canonical_mps(self, operator):
+
+        right_eigenmatrix = tf.reshape(self.right_eigenvector, [self.bond_d, self.bond_d])
+        exp_val = tf.einsum("sab,tac,bc,st->", self.A, self.A, right_eigenmatrix, operator)
+
+        return exp_val
+
 
     @property
     def entanglement_spectrum(self):
@@ -204,60 +206,96 @@ class Tfimps:
 
         return h_exp
 
+    def _add_variational_energy_left_canonical_mps_onsite_and_NN(self, h_NN, h_onsite):
+        """
+        Evaluate the variational energy density for MPS in left canonical form
+
+        :param hamiltonian: Tensor of shape [phys_d, phys_d, phys_d, phys_d] giving two-site Hamiltonian: h_NN + h_onsite,
+        e.g. Transverse Field Ising. Adopt convention that first two indices are row, second two are column.
+        :return: Expectation value of the energy density.
+        """
+        right_eigenmatrix = tf.reshape(self.right_eigenvector, [self.bond_d, self.bond_d])
+        L_AAbar = tf.einsum("sab,tac->stbc", self.A, self.A)
+        AAbar_R = tf.einsum("uac,vbd,cd->uvab", self.A, self.A, right_eigenmatrix)
+        L_AAbar_AAbar_R = tf.einsum("stab,uvab->sutv", L_AAbar, AAbar_R)
+        h_exp_NN = tf.einsum("stuv,stuv->", L_AAbar_AAbar_R, h_NN)
+        #
+        right_eigenmatrix = tf.reshape(self.right_eigenvector, [self.bond_d, self.bond_d])
+        h_exp_onsite = tf.einsum("sab,tac,bc,st->", self.A, self.A, right_eigenmatrix, h_onsite)
+
+        return h_exp_NN + h_exp_onsite
+
 
 if __name__ == "__main__":
-    # # physical and bond dimensions of MPS
-    # phys_d = 2
-    # bond_d = 4
-    #
-    # # Pauli matrices. For now we avoid complex numbers
-    # X = tf.constant([[0,1],[1,0]], dtype=tf.float64)
-    # iY = tf.constant([[0,1],[-1,0]], dtype=tf.float64)
-    # Z = tf.constant([[1,0],[0,-1]], dtype=tf.float64)
-    #
-    # I = tf.eye(phys_d, dtype=tf.float64)
-    #
-    # XX = tf.einsum('ij,kl->ikjl', X, X)
-    # YY = - tf.einsum('ij,kl->ikjl', iY, iY)
-    # ZZ = tf.einsum('ij,kl->ikjl', Z, Z)
-    # X1 = (tf.einsum('ij,kl->ikjl', X, I) + tf.einsum('ij,kl->ikjl', I, X)) / 2
-    #
-    # # Heisenberg Hamiltonian
-    # # My impression is that staggered correlations go hand in hand with nonsymmetric A matrices
-    # h_xxx = XX + YY + ZZ
-    #
-    # # Ising Hamiltonian (at criticality). Exact energy is -4/pi=-1.27324...
-    # h_ising = - ZZ - X1
 
-    phys_d = 3
-    bond_d = 2
+    ####################################
+    # HEISENBERG & ISING AT CRITICALLITY (h=1/2, lambda=1/2h=1)
+    #####################################
 
-    # Follow Annals of Physics Volume 326, Issue 1, Pages 96-192.
-    # Note that even though the As are not symmetric, the transfer matrix is.
-    # We normalize these to be in left (and right) canonical form
+    # physical and bond dimensions of MPS
+    phys_d = 2
+    bond_d = 4
 
-    Aplus = np.array([[0, 1 / np.sqrt(2)], [0, 0]])
-    Aminus = np.array([[0, 0], [-1 / np.sqrt(2), 0]])
-    A0 = np.array([[-1 / 2, 0], [0, 1 / 2]])
-    A_matrices = np.array([Aplus, A0, Aminus]) * np.sqrt(4 / 3)
+    # Pauli spin=1/2 matrices. For now we avoid complex numbers
+    X = tf.constant([[0,1],[1,0]], dtype=tf.float64)
+    iY = tf.constant([[0,1],[-1,0]], dtype=tf.float64)
+    Z = tf.constant([[1,0],[0,-1]], dtype=tf.float64)
 
-    # Spin 1 operators.
-
-    X = tf.constant([[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=tf.float64) / np.sqrt(2)
-    iY = tf.constant([[0, -1, 0], [1, 0, -1], [0, 1, 0]], dtype=tf.float64) / np.sqrt(2)
-    Z = tf.constant([[1, 0, 0], [0, 0, 0], [0, 0, -1]], dtype=tf.float64)
+    I = tf.eye(phys_d, dtype=tf.float64)
 
     XX = tf.einsum('ij,kl->ikjl', X, X)
     YY = - tf.einsum('ij,kl->ikjl', iY, iY)
     ZZ = tf.einsum('ij,kl->ikjl', Z, Z)
+    # X1 = (tf.einsum('ij,kl->ikjl', X, I) + tf.einsum('ij,kl->ikjl', I, X)) / 2
+    X1 = tf.einsum('ij,kl->ikjl', X, I)
 
-    hberg = XX + YY + ZZ
-    h_aklt = hberg + tf.einsum('abcd,cdef->abef', hberg, hberg) / 3
+    # Heisenberg Hamiltonian
+    # My impression is that staggered correlations go hand in hand with nonsymmetric A matrices
+    h_xxx = XX + YY + ZZ
+
+    # Ising Hamiltonian (at criticality). Exact energy is -4/pi=-1.27324...
+    h_ising = - ZZ - X1
+
+    #################################
+    # TRANSVERSE FIELD ISING
+    #################################
+
+    #################################
+    #AKLT
+    #################################
+
+    # phys_d = 3
+    # bond_d = 2
+    #
+    # # Follow Annals of Physics Volume 326, Issue 1, Pages 96-192.
+    # # Note that even though the As are not symmetric, the transfer matrix is.
+    # # We normalize these to be in left (and right) canonical form
+    #
+    # Aplus = np.array([[0, 1 / np.sqrt(2)], [0, 0]])
+    # Aminus = np.array([[0, 0], [-1 / np.sqrt(2), 0]])
+    # A0 = np.array([[-1 / 2, 0], [0, 1 / 2]])
+    # A_matrices = np.array([Aplus, A0, Aminus]) * np.sqrt(4 / 3)
+    #
+    # # Spin 1 operators.
+    #
+    # X = tf.constant([[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=tf.float64) / np.sqrt(2)
+    # iY = tf.constant([[0, -1, 0], [1, 0, -1], [0, 1, 0]], dtype=tf.float64) / np.sqrt(2)
+    # Z = tf.constant([[1, 0, 0], [0, 0, 0], [0, 0, -1]], dtype=tf.float64)
+    #
+    # XX = tf.einsum('ij,kl->ikjl', X, X)
+    # YY = - tf.einsum('ij,kl->ikjl', iY, iY)
+    # ZZ = tf.einsum('ij,kl->ikjl', Z, Z)
+    #
+    # hberg = XX + YY + ZZ
+    # h_aklt = hberg + tf.einsum('abcd,cdef->abef', hberg, hberg) / 3
+
+    #######################################################################################
+    #######################################################################################
 
     # Initialize the MPS
 
 
-    imps = Tfimps(phys_d, bond_d, hamiltonian=h_aklt, symmetrize=False)
+    imps = Tfimps(phys_d, bond_d, hamiltonian=h_ising, symmetrize=False)
     problem = pymanopt.Problem(manifold=imps.mps_manifold, cost=imps.variational_energy,
                                arg=imps.Stiefel)
 
